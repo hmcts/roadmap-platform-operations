@@ -11,3 +11,9 @@ By squad:
 - [Blue squad](https://github.com/orgs/hmcts/projects/10/views/9)
 - [Yellow squad](https://github.com/orgs/hmcts/projects/10/views/10)
 - [Orange squad](https://github.com/orgs/hmcts/projects/10/views/11)
+
+## Maintenance
+
+- [New labels](https://github.com/hmcts/roadmap-platform-operations/labels)
+- [New sprint start](https://github.com/orgs/hmcts/projects/10/settings/fields/27713965)
+- [New sprint end](https://github.com/orgs/hmcts/projects/10/settings/fields/38305924)
