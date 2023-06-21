@@ -12,6 +12,11 @@ By squad:
 - [Yellow squad](https://github.com/orgs/hmcts/projects/10/views/10)
 - [Orange squad](https://github.com/orgs/hmcts/projects/10/views/11)
 
+## Planning
+
+- [Requirements not yet allocated](https://github.com/orgs/hmcts/projects/10/views/16)
+- [All requirements ordered by size](https://github.com/orgs/hmcts/projects/10/views/3)
+
 ## Maintenance
 
 - [New labels](https://github.com/hmcts/roadmap-platform-operations/labels)
