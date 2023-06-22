@@ -10,10 +10,6 @@ const graphqlWithAuth = graphql.defaults({
 
 
 export async function createGitHubIssue(repositoryId, issue) {
-    // GitHub create with summary
-    // description will have Jira key
-    // add to project with size
-
     await graphqlWithAuth(
         `mutation CreateIssue($repository_id:ID!, $title:String!, $body:String!) {
                 createIssue(input: {repositoryId: $repository_id, title: $title, body: $body}) {
