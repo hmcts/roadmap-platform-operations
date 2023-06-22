@@ -3,8 +3,28 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
+name: 'Jira to Roadmap sync'
+
 trigger:
-- master
+  branches:
+    include:
+      - master
+  paths:
+    include:
+      - jira-automation/
+
+pr:
+  paths:
+    include:
+      - jira-automation/
+
+schedules:
+  - cron: '0 8-17 * * Mon-Fri'
+    displayName: Runs during business hours
+    branches:
+      include:
+        - master
+    always: 'true'
 
 pool:
   name: 'hmcts-cftptl-agent-pool'
@@ -19,7 +39,7 @@ steps:
       secretsFilter: "github-management-api-token,jira-api-token"
   - task: NodeTool@0
     inputs:
-      versionSpec: '18.x'
+      versionSpec: '20.x'
     displayName: 'Install Node.js'
   - script: |
       npm install
