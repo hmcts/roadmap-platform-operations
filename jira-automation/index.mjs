@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import {createGitHubIssue, lookupRepoId} from "./github.mjs";
 import {addJiraLabel, searchForIssuesToMigrate} from "./jira.mjs";
 
