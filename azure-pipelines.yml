@@ -51,5 +51,5 @@ steps:
       GITHUB_TOKEN: $(github-management-api-token)
       JIRA_API_TOKEN: $(jira-api-token)
     inputs:
-      targetType: filePath
-      filePath: jira-automation/index.mjs
+      targetType: inline
+      script: node jira-automation/index.mjs
