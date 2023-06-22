@@ -2,14 +2,18 @@
   "name": "jira-automation",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.mjs",
   "scripts": {
+    "start": "node index.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "config": "^3.3.9",
+    "@octokit/graphql": "^6.0.1",
     "jira-client": "^8.2.2"
+  },
+  "devDependencies": {
+    "@types/jira-client": "^7.1.6"
   }
 }
