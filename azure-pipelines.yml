@@ -3,17 +3,53 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
+name: 'Jira to Roadmap sync'
+
 trigger:
-- master
+  branches:
+    include:
+      - master
+  paths:
+    include:
+      - jira-automation/
+
+pr:
+  paths:
+    include:
+      - jira-automation/
+
+schedules:
+  - cron: '0 8-17 * * Mon-Fri'
+    displayName: Runs during business hours
+    branches:
+      include:
+        - master
+    always: 'true'
 
 pool:
-  vmImage: ubuntu-latest
+  name: 'hmcts-cftptl-agent-pool'
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  - task: AzureKeyVault@2
+    displayName: "Get GitHub API token from Key Vault"
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: "DTS-CFTPTL-INTSVC"
+      keyVaultName: "cftptl-intsvc"
+      secretsFilter: "github-management-api-token,jira-api-token"
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'
+    displayName: 'Install Node.js'
+  - script: |
+      npm install
+    displayName: 'npm install'
+    workingDirectory: jira-automation
+  - task: Bash@3
+    displayName: 'Importing issues'
+    env:
+      GITHUB_TOKEN: $(github-management-api-token)
+      JIRA_API_TOKEN: $(jira-api-token)
+    inputs:
+      targetType: inline
+      script: node jira-automation/index.mjs
