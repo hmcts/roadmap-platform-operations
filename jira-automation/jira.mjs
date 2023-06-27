@@ -29,7 +29,7 @@ export async function searchForIssuesToMigrate() {
         return await jira.searchJira(
             jqlQuery,
             {
-                fields: ['summary']
+                fields: ['summary', 'labels']
             }
         )
     } catch (err) {
