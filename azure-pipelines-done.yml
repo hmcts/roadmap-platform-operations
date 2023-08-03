@@ -24,12 +24,12 @@ steps:
       npm install
     displayName: 'npm install'
     workingDirectory: jira-automation
-  - task: Bash@3
-    displayName: 'Updating issue to done'
-    env:
-      GITHUB_TOKEN: $(github-management-api-token)
-      JIRA_API_TOKEN: $(jira-api-token)
-      JIRA_ISSUE_KEY: '${{ parameters.JiraPlatformOperationsRoadmapDone.key }}'
-    inputs:
-      targetType: inline
-      script: node jira-automation/update-issue-done.mjs
+  # - task: Bash@3
+  #   displayName: 'Updating issue to done'
+  #   env:
+  #     GITHUB_TOKEN: $(github-management-api-token)
+  #     JIRA_API_TOKEN: $(jira-api-token)
+  #     JIRA_ISSUE_KEY: '${{ parameters.JiraPlatformOperationsRoadmapDone.key }}'
+  #   inputs:
+  #     targetType: inline
+  #     script: node jira-automation/update-issue-done.mjs
