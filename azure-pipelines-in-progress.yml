@@ -1,0 +1,35 @@
+---
+name: 'Jira to Roadmap sync - Set in progress'
+trigger: none
+pr: none
+
+resources:
+  webhooks:
+    - webhook: JiraPlatformOperationsRoadmapInProgress
+      connection: JiraPlatformOperationsRoadmapInProgress
+
+steps:
+  - task: AzureKeyVault@2
+    displayName: "Get GitHub API token from Key Vault"
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: "DTS-CFTPTL-INTSVC"
+      keyVaultName: "cftptl-intsvc"
+      secretsFilter: "github-management-api-token,jira-api-token"
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'
+    displayName: 'Install Node.js'
+  - script: |
+      npm install
+    displayName: 'npm install'
+    workingDirectory: jira-automation
+  - task: Bash@3
+    displayName: 'Updating issue to in progress'
+    env:
+      GITHUB_TOKEN: $(github-management-api-token)
+      JIRA_API_TOKEN: $(jira-api-token)
+      JIRA_ISSUE_KEY: '${{ parameters.JiraPlatformOperationsRoadmapInProgress.issue.key }}'
+    inputs:
+      targetType: inline
+      script: node jira-automation/update-issue-in-progress.mjs
