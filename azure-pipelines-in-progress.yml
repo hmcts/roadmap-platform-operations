@@ -29,7 +29,7 @@ steps:
     env:
       GITHUB_TOKEN: $(github-management-api-token)
       JIRA_API_TOKEN: $(jira-api-token)
-      JIRA_ISSUE_KEY: '${{ parameters.JiraPlatformOperationsRoadmapInProgress.issue.key }}'
+      JIRA_ISSUE_KEY: '${{ parameters.JiraPlatformOperationsRoadmapInProgress.key }}'
     inputs:
       targetType: inline
       script: node jira-automation/update-issue-in-progress.mjs
