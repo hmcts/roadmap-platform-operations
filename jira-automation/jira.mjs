@@ -23,6 +23,24 @@ export async function addJiraLabel(jiraKey) {
     }
 }
 
+export async function searchForIssueToMigrate({key}) {
+    const jqlQuery = `filter = 61018 AND key = ${key}`
+    try {
+        return await jira.searchJira(
+            jqlQuery,
+            {
+                fields: ['summary', 'labels']
+            }
+        )
+    } catch (err) {
+        console.log("Error searching for issues in jira", err)
+        return {
+            issues: []
+        }
+    }
+}
+
+
 export async function searchForIssuesToMigrate() {
     const jqlQuery = 'filter = 61018'
     try {

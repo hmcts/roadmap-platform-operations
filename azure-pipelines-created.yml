@@ -1,3 +1,4 @@
+---
 name: 'Jira to Roadmap sync - Created'
 trigger: none
 pr: none
@@ -11,10 +12,27 @@ pool:
   name: 'hmcts-cftptl-agent-pool'
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  - task: AzureKeyVault@2
+    displayName: "Get GitHub API token from Key Vault"
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: "DTS-CFTPTL-INTSVC"
+      keyVaultName: "cftptl-intsvc"
+      secretsFilter: "github-management-api-token,jira-api-token"
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'
+    displayName: 'Install Node.js'
+  - script: |
+      npm install
+    displayName: 'npm install'
+    workingDirectory: jira-automation
+  - task: Bash@3
+    displayName: 'Creating issue'
+    env:
+      GITHUB_TOKEN: $(github-management-api-token)
+      JIRA_API_TOKEN: $(jira-api-token)
+      JIRA_ISSUE_KEY: '${{ parameters.JiraPlatformOperationsRoadmapCreated.key }}'
+    inputs:
+      targetType: inline
+      script: node jira-automation/create-issue.mjs
