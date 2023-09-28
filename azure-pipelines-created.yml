@@ -1,0 +1,20 @@
+name: 'Jira to Roadmap sync - Created'
+trigger: none
+pr: none
+
+resources:
+  webhooks:
+    - webhook: JiraPlatformOperationsRoadmapCreated
+      connection: JiraPlatformOperationsRoadmapCreated
+
+pool:
+  name: 'hmcts-cftptl-agent-pool'
+
+steps:
+- script: echo Hello, world!
+  displayName: 'Run a one-line script'
+
+- script: |
+    echo Add other tasks to build, test, and deploy your project.
+    echo See https://aka.ms/yaml
+  displayName: 'Run a multi-line script'
