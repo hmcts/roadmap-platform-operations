@@ -2,6 +2,11 @@
 
 import {createGitHubIssue, lookupRepo} from "./github.mjs";
 import {addJiraLabel, searchForIssuesToMigrate} from "./jira.mjs";
+import { addAreaLabels } from "./utils.mjs";
+
+import {assertCredentialsPresent} from "./utils.mjs";
+
+assertCredentialsPresent()
 
 async function processIssues() {
     const { id, labels } = await lookupRepo()
@@ -11,7 +16,9 @@ async function processIssues() {
 
     for (const issue of results.issues) {
         console.log("Processing issue", issue.key, issue.fields.summary)
-        await createGitHubIssue(id, issue, labels)
+        const labelsToAdd = addAreaLabels(issue)
+
+        await createGitHubIssue(id, issue, labels, labelsToAdd)
         await addJiraLabel(issue.key)
     }
 
