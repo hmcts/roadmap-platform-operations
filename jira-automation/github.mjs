@@ -9,8 +9,8 @@ const graphqlWithAuth = graphql.defaults({
 });
 
 
-export async function createGitHubIssue(repositoryId, issue, labels) {
-    const labelIds = issue.fields.labels
+export async function createGitHubIssue(repositoryId, issue, labels, labelsToAdd) {
+    const labelIds = labelsToAdd
         .filter(label => labels.find(l => l.name.toLowerCase() === label.toLowerCase()))
         .map(label => labels.find(l => l.name.toLowerCase() === label.toLowerCase()).id)
 
