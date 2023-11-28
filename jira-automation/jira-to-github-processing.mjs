@@ -37,6 +37,10 @@ export function jiraToGitHub({
     issueId,
     content
 }) {
+    if (!content) {
+        return issueId
+    }
+
     const summary = extractSummary(content)
     const intendedOutcome = extractIntendedOutcome(content)
     const impactOnTeams = extractImpactOnTeams(content)
