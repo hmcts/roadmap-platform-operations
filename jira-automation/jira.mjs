@@ -40,6 +40,15 @@ export async function searchForIssueToMigrate({key}) {
     }
 }
 
+export async function getIssue({key}) {
+    return await jira.getIssue(
+        key,
+        {
+            fields: ['summary', 'labels', 'description']
+        }
+    )
+}
+
 
 export async function searchForIssuesToMigrate() {
     const jqlQuery = 'filter = 61018'

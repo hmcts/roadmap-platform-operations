@@ -34,6 +34,25 @@ export async function createGitHubIssue(repositoryId, issue, labels, labelsToAdd
     );
 }
 
+export async function updateGitHubIssue({
+    issueId, title, body}
+  ) {
+  await graphqlWithAuth(
+      `mutation UpdateIssue($issueId: ID!, $title: String!, $body: String!) {
+        updateIssue(input: {id: $issueId, title: $title, body: $body}) {
+          issue {
+            id
+          }
+        }
+      }`,
+      {
+          issueId,
+          title,
+          body,
+      }
+  );
+}
+
 export async function lookupRepo() {
     const result = await graphqlWithAuth(
         `query FindRepo($owner:String!, $repository:String!) {
@@ -144,7 +163,7 @@ async function getItemId({projectId, issueKey, cursor}) {
     return getItemId({projectId, issueKey, cursor: newCursor})
 }
 
-async function findIssueNumberFromJiraKey({issueKey}) {
+export async function findIssueNumberFromJiraKey({issueKey}) {
     const result = await graphqlWithAuth(
         `query {
            search(query: "repo:hmcts/roadmap-platform-operations in:body ${issueKey}", type: ISSUE, first: 10) {
