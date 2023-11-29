@@ -28,13 +28,15 @@ async function getOpenIssues() {
 async function run() {
   const issues = await getOpenIssues();
 
+  console.log('Found', issues.length, 'issues')
+
   for (const issue of issues) {
 
     console.log('Processing', issue.title)
     const regexResult = issue.body?.match(/DTSPO-\d+/)
     if (!regexResult) {
       // normally tech debt issues
-      console.log('No Jira issue found, skipping')
+      console.log('No DTSPO Jira issue found, skipping')
       continue
     }
     const issueKey = regexResult[0]
