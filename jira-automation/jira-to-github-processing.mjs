@@ -30,13 +30,21 @@ export function extractSection({beginning, end, content}) {
         return ''
     }
 
-    return content.substring(start + beginning.length, finish).trim()
+    const result = content.substring(start + beginning.length, finish).trim()
+
+    // replace @mentions with `@mention` so that we don't notify people accidentally
+    const replacedMentions = result.replace(/@([a-zA-Z0-9_]+)/g, '`$1`')
+    return replacedMentions
 }
 
 export function jiraToGitHub({
     issueId,
     content
 }) {
+    if (!content) {
+        return issueId
+    }
+
     const summary = extractSummary(content)
     const intendedOutcome = extractIntendedOutcome(content)
     const impactOnTeams = extractImpactOnTeams(content)
