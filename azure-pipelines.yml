@@ -20,7 +20,7 @@ pr:
 
 schedules:
   - cron: '0 8-17 * * Mon-Fri'
-    displayName: Runs during business hours
+    displayName: Runs once every hour during business hours, Monday through Friday
     branches:
       include:
         - master
