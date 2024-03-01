@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@octokit/graphql": "^7.0.0",
+    "@octokit/graphql": "^8.0.0",
     "@octokit/rest": "^20.0.2",
     "dedent": "^1.5.1",
     "jira-client": "^8.2.2",
