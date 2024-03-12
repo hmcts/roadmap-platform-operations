@@ -8,6 +8,8 @@ const jira = new JiraApi({
     strictSSL: true
 });
 
+export const CNP_FILTER = 61018
+export const CRIME_FILTER = 63814
 
 export async function addJiraLabel(jiraKey) {
     try {
@@ -50,8 +52,15 @@ export async function getIssue({key}) {
 }
 
 
-export async function searchForIssuesToMigrate() {
-    const jqlQuery = 'filter = 61018'
+/**
+ * Searches for all issues in based on the existing filter id in Jira.
+ * Default value is the HMCTS DTSPO filter if one is not provided
+ *
+ * @param filterId Jira filter id
+ * @returns {Promise<{issues: *[]}|JiraApi.JsonResponse>}
+ */
+export async function searchForIssuesToMigrate(filterId= CNP_FILTER) {
+    const jqlQuery = `filter = ${filterId}`
     try {
         return await jira.searchJira(
             jqlQuery,

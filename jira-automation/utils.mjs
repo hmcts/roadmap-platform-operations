@@ -2,6 +2,8 @@ export function addAreaLabels(issue) {
     const labels = issue.fields.labels
     if (issue.key.includes('DTSPO')) {
         labels.push('CNP')
+    } else if (issue.key.includes('EI')) {
+        labels.push('CRIME')
     } else {
         labels.push('common-platform')
     }
