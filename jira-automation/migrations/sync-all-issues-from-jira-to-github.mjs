@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Octokit } from "@octokit/rest";
-import {jiraToGitHub} from "../jira-to-github-processing.mjs"
+import {jiraToGitHub, extractAndSumPrioritisationMatrix} from "../jira-to-github-processing.mjs"
 import { getIssue } from "../jira.mjs";
 import { updateGitHubIssue } from "../github.mjs";
 
@@ -41,7 +41,7 @@ async function run() {
     }
     const issueKey = regexResult[0]
 
-    console.log('Fetching Jira', issueKey);
+    console.log('Fetching Jira', `https://tools.hmcts.net/jira/browse/${issueKey}`);
 
     let jiraIssue
     try {
@@ -52,16 +52,19 @@ async function run() {
       process.exit(1)
     }
 
-    const converted = jiraToGitHub({
-      issueId: jiraIssue.key,
-      content: jiraIssue.fields.description
-  })
+    const score = extractAndSumPrioritisationMatrix(jiraIssue.fields.description)
+    console.log(score)
 
-  await updateGitHubIssue({
-    issueId: issue.node_id,
-    title: jiraIssue.fields.summary,
-    body: converted
-})
+  //   const converted = jiraToGitHub({
+  //     issueId: jiraIssue.key,
+  //     content: jiraIssue.fields.description
+  // })
+
+  // await updateGitHubIssue({
+  //   issueId: issue.node_id,
+  //   title: jiraIssue.fields.summary,
+  //   body: converted
+// })
 
 
   }

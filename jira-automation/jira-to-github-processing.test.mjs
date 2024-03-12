@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import {describe, it} from 'node:test'
 
-import {extractIntendedOutcome, extractSummary, jiraToGitHub} from './jira-to-github-processing.mjs'
+import {extractIntendedOutcome, extractAndSumPrioritisationMatrix, extractSummary, jiraToGitHub} from './jira-to-github-processing.mjs'
 
 const issue = {
   key: 'DTSPO-123',
@@ -110,5 +110,12 @@ describe('jira-to-github-processing', t => {
     ## Impact on Teams
 
     *No impact*`)
+  })
+
+  it('extracts table', t => {
+    const result = extractAndSumPrioritisationMatrix(issue.fields.description)
+    
+    assert.equal(result, 117)
+
   })
 })
