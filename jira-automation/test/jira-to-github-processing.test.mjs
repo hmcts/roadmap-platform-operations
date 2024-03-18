@@ -1,9 +1,9 @@
 import assert from 'node:assert';
 import {describe, it} from 'node:test'
 
-import {extractIntendedOutcome, extractSummary, jiraToGitHub} from './jira-to-github-processing.mjs'
+import {extractIntendedOutcome, extractSummary, jiraToGitHub} from '../jira-to-github-processing.mjs'
 
-const issue = {
+const cnp_issue = {
   key: 'DTSPO-123',
   fields: {
     summary: 'This is a summary',
@@ -72,25 +72,39 @@ const issue = {
   }
 }
 
-describe('jira-to-github-processing', t => {
+const crime_issue = {
+  key: 'EI-123',
+  fields: {
+    summary: 'This is a summary for crime issue',
+    description: `As a DevOps engineer.
+    
+    This can be done
+    
+    DOD:
+    
+    means definition of done`
+  }
+}
+
+describe('jira-to-github-processing for CNP', t => {
   it('extracts summary from Jira issue', t => {
 
-    const result = extractSummary(issue.fields.description)
+    const result = extractSummary(cnp_issue.fields.description)
 
     assert.equal(result, 'Hourly Job to provide a CSV file in a storage account that has a count of all Virtual machines and VM scalesets that are running  for the CJS Common Platform tenant by SKU type, Resource name, resource group name and Subscription name.')
   })
 
   it('extracts intended outcome from Jira issue', t => {
 
-    const result = extractIntendedOutcome(issue.fields.description)
+    const result = extractIntendedOutcome(cnp_issue.fields.description)
 
     assert.equal(result, `*Use data in CSV file format to review and understand how many SKu's are running every hours and especially at night so an average can be used to purchase the desired RI's for CFT.*\n    \n    *This should cover both virtual machines and scale sets.*\n    \n    *Every hour should have a new CSV file*`)
   })
 
   it('converts jira description to github markdown', t => {
     const result = jiraToGitHub({
-        issueId: issue.key,
-        content: issue.fields.description
+        issueId: cnp_issue.key,
+        content: cnp_issue.fields.description
     })
 
     assert.equal(result, `DTSPO-123
@@ -111,4 +125,32 @@ describe('jira-to-github-processing', t => {
 
     *No impact*`)
   })
+})
+
+describe('jira-to-github-processing for CRIME', t => {
+  describe('crime not using template format', t => {
+    it('should not extract summary from Jira issue', t => {
+
+      const result = extractSummary(crime_issue.fields.description)
+
+      assert.equal(result, '')
+    })
+
+    it('should not extract intended outcome from Jira issue', t => {
+
+      const result = extractIntendedOutcome(crime_issue.fields.description)
+
+      assert.equal(result, '')
+    })
+
+    it('should convert jira description to github markdown', t => {
+      const result = jiraToGitHub({
+        issueId: crime_issue.key,
+        content: crime_issue.fields.description
+      })
+
+      assert.equal(result, `EI-123\n\n## Epic Description\n\nAs a DevOps engineer.\n\nThis can be done\n\nDOD:\n\nmeans definition of done`)
+    })
+  })
+
 })

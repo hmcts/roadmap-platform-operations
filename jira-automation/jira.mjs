@@ -1,4 +1,5 @@
 import JiraApi from "jira-client";
+import {isCrimeIssue} from "./utils.mjs";
 
 const jira = new JiraApi({
     protocol: 'https',
@@ -25,8 +26,20 @@ export async function addJiraLabel(jiraKey) {
     }
 }
 
+/**
+ * Searches for and issue based on filter and id in Jira key.
+ * Would use either the Crime or cnp filter depending on the issue key
+ *
+ * @param key
+ * @returns {Promise<{issues: *[]}|JiraApi.JsonResponse>}
+ */
 export async function searchForIssueToMigrate({key}) {
-    const jqlQuery = `filter = 61018 AND key = ${key}`
+    let jqlQuery = `filter = ${CNP_FILTER} AND key = ${key}`
+
+    if (isCrimeIssue(`${key}`)) {
+        jqlQuery = `filter = ${CRIME_FILTER} AND key = ${key}`
+    }
+
     try {
         return await jira.searchJira(
             jqlQuery,
@@ -59,7 +72,7 @@ export async function getIssue({key}) {
  * @param filterId Jira filter id
  * @returns {Promise<{issues: *[]}|JiraApi.JsonResponse>}
  */
-export async function searchForIssuesToMigrate(filterId= CNP_FILTER) {
+export async function searchForIssuesToMigrate(filterId = CNP_FILTER) {
     const jqlQuery = `filter = ${filterId}`
     try {
         return await jira.searchJira(

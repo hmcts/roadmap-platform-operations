@@ -1,8 +1,16 @@
+export function isCrimeIssue(issueId) {
+    return issueId.startsWith('EI')
+}
+
+export function isCnpIssue(issueId) {
+    return issueId.startsWith('DTSPO')
+}
+
 export function addAreaLabels(issue) {
     const labels = issue.fields.labels
-    if (issue.key.includes('DTSPO')) {
+    if (isCnpIssue(issue.key)) {
         labels.push('CNP')
-    } else if (issue.key.includes('EI')) {
+    } else if (isCrimeIssue(issue.key)) {
         labels.push('CRIME')
     } else {
         labels.push('common-platform')
