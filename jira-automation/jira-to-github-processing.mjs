@@ -1,6 +1,6 @@
 import jira2md from 'jira2md'
 import dedent from 'dedent'
-import {isCrimeIssue} from "./utils.mjs";
+import {isCrimeIssue, hasItems} from "./utils.mjs";
 
 export function extractSummary(content) {
     const summarySection = extractSection({beginning: 'h3. Summary', end: 'h3. Intended Outcome', content})
@@ -56,6 +56,26 @@ export function extractDescriptionForCrime(issueId, content) {
     ${content}` : ''}
     `)
 }
+
+export function extractPrioritisationTotalScore(content) {
+    let score = 0;
+
+    let values = content.split('\n')
+        .filter(line => line.trim().startsWith('Total:') || line.trim().startsWith('Score:'));
+
+    if(hasItems(values)){
+        const value = values[0].trim()
+        const matches = value.match(/(\d+)/);
+
+        if (hasItems(matches)) {
+            score = matches[0]
+            console.log(`A score of ${score} found`);
+        }
+    }
+
+    return score;
+}
+
 
 export function jiraToGitHub({issueId, content}) {
     /**

@@ -35,7 +35,7 @@ export async function createGitHubIssue(repositoryId, issue, labels, labelsToAdd
 }
 
 export async function updateGitHubIssue({
-    issueId, title, body}
+    issueId, title, body, score}
   ) {
   await graphqlWithAuth(
       `mutation UpdateIssue($issueId: ID!, $title: String!, $body: String!) {
@@ -49,6 +49,7 @@ export async function updateGitHubIssue({
           issueId,
           title,
           body,
+          score
       }
   );
 }

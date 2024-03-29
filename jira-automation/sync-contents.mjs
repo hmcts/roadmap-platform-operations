@@ -4,7 +4,7 @@ import {findIssueNumberFromJiraKey, updateGitHubIssue} from "./github.mjs";
 import {getIssue} from "./jira.mjs";
 import { assertCredentialsPresent } from "./utils.mjs";
 
-import {jiraToGitHub} from "./jira-to-github-processing.mjs";
+import {extractPrioritisationTotalScore, jiraToGitHub} from "./jira-to-github-processing.mjs";
 
 const issueKey = process.env.JIRA_ISSUE_KEY
 
@@ -36,10 +36,14 @@ async function processIssues() {
 
     console.log(converted)
 
+    console.log("Extracting issue score", issue.key, issue.fields.summary)
+    const score = extractPrioritisationTotalScore(converted)
+
     await updateGitHubIssue({
         issueId,
         title: issue.fields.summary,
-        body: converted
+        body: converted,
+        score: score
     })
 }
 
