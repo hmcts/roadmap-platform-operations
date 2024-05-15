@@ -48,10 +48,19 @@ export async function updateGitHubIssue({
       {
           issueId,
           title,
-          body,
+          body
       }
-  );
+  )
 }
+
+export async function updateGitHubIssueSize({issueKey, score}) {
+    const projectId = await getProjectId()
+    const {issueNumber} = await findIssueNumberFromJiraKey({issueKey})
+    const itemId = await getItemId({projectId, issueKey: issueNumber})
+    const sizeField = await getSizeFieldId({projectId})
+    await setSize({projectId, itemId, fieldId: sizeField.id, score})
+}
+
 
 export async function lookupRepo() {
     const result = await graphqlWithAuth(
@@ -102,6 +111,32 @@ async function getStatusFieldIds({projectId}) {
     return result.node.fields.nodes
         .filter(field => field !== {})
         .filter(field => field.name === 'Status')
+        .pop()
+}
+
+async function getSizeFieldId({projectId}) {
+    const result = await graphqlWithAuth(
+        `query ($projectId: ID!){
+          node(id: $projectId) {
+            ... on ProjectV2 {
+              fields(first: 20) {
+                nodes {
+                  ... on ProjectV2Field {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }`,
+        {
+            projectId,
+        })
+
+    return result.node.fields.nodes
+        .filter(field => field !== {})
+        .filter(field => field.name === 'Size')
         .pop()
 }
 
@@ -211,6 +246,24 @@ async function setStatus({projectId, itemId, fieldId, optionId}) {
     )
 }
 
+async function setSize({projectId, itemId, fieldId, score}) {
+    await graphqlWithAuth(
+        `mutation ($projectId: ID!, $itemId: ID!, $fieldId: ID!, $score: Float) {
+          updateProjectV2ItemFieldValue(input: {projectId: $projectId, itemId: $itemId, fieldId: $fieldId, value: {number: $score}}) {
+            projectV2Item {
+              id
+            }
+          }
+        }`,
+        {
+            projectId,
+            itemId,
+            fieldId,
+            score,
+        }
+    )
+}
+
 function getOptionId({optionName, statusFieldIds}) {
     return statusFieldIds.options.filter(option => option.name.includes(optionName)).pop().id;
 }
@@ -236,7 +289,7 @@ export async function setInProgress({issueKey}) {
 }
 
 export async function setDone({issueKey}) {
-    const {issueId } = await setStatusFull({issueKey, optionName: 'Done'});
+    const {issueId} = await setStatusFull({issueKey, optionName: 'Done'});
 
     await closeIssue({issueId})
 }

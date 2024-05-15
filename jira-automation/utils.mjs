@@ -18,6 +18,10 @@ export function addAreaLabels(issue) {
     return labels
 }
 
+export function hasItems(arr) {
+    return Array.isArray(arr) && arr.length > 0
+}
+
 export function assertCredentialsPresent() {
     if (!process.env.JIRA_API_TOKEN) {
         console.error('JIRA_API_TOKEN environment variable not set')

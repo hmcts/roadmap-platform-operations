@@ -1,7 +1,12 @@
 import assert from 'node:assert';
 import {describe, it} from 'node:test'
 
-import {extractIntendedOutcome, extractSummary, jiraToGitHub} from '../jira-to-github-processing.mjs'
+import {
+  extractIntendedOutcome,
+  extractSummary,
+  extractPrioritisationTotalScore,
+  jiraToGitHub
+} from '../jira-to-github-processing.mjs'
 
 const cnp_issue = {
   key: 'DTSPO-123',
@@ -68,7 +73,7 @@ const cnp_issue = {
     |High Availability Improvement?|High 75, Medium 50, Low 25, None 0|0|
     |Path to Live Improvement?|Major 75, Minor 25, None 0|0|
     
-    Score: 117`
+    Total: 117`
   }
 }
 
@@ -125,6 +130,13 @@ describe('jira-to-github-processing for CNP', t => {
 
     *No impact*`)
   })
+
+  it('extracts score from Jira issue', t => {
+    const score = extractPrioritisationTotalScore(cnp_issue.fields.description)
+
+    assert.equal(score, 117, 'Prioritisation score in not accurate')
+  })
+
 })
 
 describe('jira-to-github-processing for CRIME', t => {
@@ -151,6 +163,11 @@ describe('jira-to-github-processing for CRIME', t => {
 
       assert.equal(result, `EI-123\n\n## Epic Description\n\nAs a DevOps engineer.\n\nThis can be done\n\nDOD:\n\nmeans definition of done`)
     })
-  })
 
+    it('should not extracts score from Jira issue', t => {
+      const score = extractPrioritisationTotalScore(crime_issue.fields.description)
+
+      assert.equal(score, 0, 'Prioritisation score in not accurate')
+    })
+  })
 })
