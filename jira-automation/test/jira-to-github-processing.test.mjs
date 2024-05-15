@@ -170,5 +170,4 @@ describe('jira-to-github-processing for CRIME', t => {
       assert.equal(score, 0, 'Prioritisation score in not accurate')
     })
   })
-
 })

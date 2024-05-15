@@ -1,6 +1,6 @@
 import jira2md from 'jira2md'
 import dedent from 'dedent'
-import {isCrimeIssue, hasItems} from "./utils.mjs";
+import {hasItems, isCrimeIssue} from "./utils.mjs";
 
 export function extractSummary(content) {
     const summarySection = extractSection({beginning: 'h3. Summary', end: 'h3. Intended Outcome', content})
@@ -48,7 +48,7 @@ export function extractSection({beginning, end, content}) {
 
 export function extractDescriptionForCrime(issueId, content) {
     content = content.replace(/@([a-zA-Z0-9_]+)/g, '`$1`')
-    content= jira2md.to_markdown(content)
+    content = jira2md.to_markdown(content)
     return dedent(`${issueId}
     
     ${content ? `## Epic Description
@@ -58,13 +58,15 @@ export function extractDescriptionForCrime(issueId, content) {
 }
 
 export function extractPrioritisationTotalScore(content) {
-    let score = 0;
+    let score = "0";
+    const endSection = dedent(extractEndSection({beginning: 'h3. Prioritisation Matrix', content}))
 
-    let values = content.split('\n')
+    let values = endSection
+        .split('\n')
         .filter(line => line.trim().startsWith('Total:') || line.trim().startsWith('Score:'));
 
-    if(hasItems(values)){
-        const value = values[0].trim()
+    if (hasItems(values)) {
+        const value = values.at(-1).trim()
         const matches = value.match(/(\d+)/);
 
         if (hasItems(matches)) {
@@ -73,7 +75,7 @@ export function extractPrioritisationTotalScore(content) {
         }
     }
 
-    return score;
+    return parseFloat(score);
 }
 
 
@@ -107,4 +109,23 @@ export function jiraToGitHub({issueId, content}) {
     ${impactOnTeams}` : ''}
     `)
 
+}
+
+export function extractEndSection({beginning, content}) {
+    if (!content) {
+        return undefined
+    }
+    const start = content.indexOf(beginning)
+
+    if (start === -1) {
+        return ''
+    }
+
+    const result = content.substring(start + beginning.length, content.length).trim()
+    return sanitiseContent(result)
+}
+
+function sanitiseContent(content) {
+    // replace @mentions with `@mention` so that we don't notify people accidentally
+    return content.replace(/@([a-zA-Z0-9_]+)/g, '`$1`')
 }
