@@ -86,13 +86,11 @@ export function jiraToGitHub({issueId, content}) {
     const impactOnTeams = extractImpactOnTeams(content)
 
     /**
-     * Some Crime content does not use template format so return actual content if crime ticket
-     * No need to extract various sections. Would be updated once standardised.
+     * Some Crime content does not use template format so return actual content
+     * if crime ticket without the template format content then.
      */
     if (isCrimeIssue(issueId) && summary.length === 0) {
         return extractDescriptionForCrime(issueId, content)
-    } else if (!content) {
-        return issueId;
     }
 
     return dedent(`${issueId}
