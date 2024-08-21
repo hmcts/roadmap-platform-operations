@@ -14,6 +14,7 @@ export async function createGitHubIssue(repositoryId, issue, labels, labelsToAdd
         .filter(label => labels.find(l => l.name.toLowerCase() === label.toLowerCase()))
         .map(label => labels.find(l => l.name.toLowerCase() === label.toLowerCase()).id)
 
+    //NOTE: May need updating to only create if issue does not already exists.
     await graphqlWithAuth(
         `mutation CreateIssue($repository_id: ID!, $title: String!, $body: String!, $label_ids:[ID!]) {
           createIssue(

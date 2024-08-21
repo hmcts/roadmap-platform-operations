@@ -80,19 +80,17 @@ export function extractPrioritisationTotalScore(content) {
 
 
 export function jiraToGitHub({issueId, content}) {
-    /**
-     * Crime does not use template format so return actual content if crime ticket
-     * No need to extract various sections. Would be updated once standardised.
-     */
-    if (content && isCrimeIssue(issueId)) {
-        return extractDescriptionForCrime(issueId, content)
-    } else if (!content) {
-        return issueId;
-    }
 
     const summary = extractSummary(content)
     const intendedOutcome = extractIntendedOutcome(content)
     const impactOnTeams = extractImpactOnTeams(content)
+
+    /**
+     * Crime ticket without the template format content then use a default.
+     */
+    if (isCrimeIssue(issueId) && summary.length === 0) {
+        return extractDescriptionForCrime(issueId, content)
+    }
 
     return dedent(`${issueId}
     
