@@ -30,6 +30,6 @@ export function assertCredentialsPresent() {
 
 // Updates should only happen on one issue
 export function getSingleItem(arry) {
-    return arry.at(0)
+    return arry.at(arry.length - 1)
 }
 
