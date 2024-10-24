@@ -1,4 +1,5 @@
 import {graphql} from "@octokit/graphql";
+import {getSingleItem} from "./utils.mjs";
 
 const token = process.env.GITHUB_TOKEN || process.env.GITHUB_REPO_TOKEN;
 
@@ -36,22 +37,23 @@ export async function createGitHubIssue(repositoryId, issue, labels, labelsToAdd
 }
 
 export async function updateGitHubIssue({
-    issueId, title, body}
-  ) {
-  await graphqlWithAuth(
-      `mutation UpdateIssue($issueId: ID!, $title: String!, $body: String!) {
+                                            issueId, title, body
+                                        }
+) {
+    await graphqlWithAuth(
+        `mutation UpdateIssue($issueId: ID!, $title: String!, $body: String!) {
         updateIssue(input: {id: $issueId, title: $title, body: $body}) {
           issue {
             id
           }
         }
       }`,
-      {
-          issueId,
-          title,
-          body
-      }
-  )
+        {
+            issueId,
+            title,
+            body
+        }
+    )
 }
 
 export async function updateGitHubIssueSize({issueKey, score}) {
@@ -202,7 +204,7 @@ async function getItemId({projectId, issueKey, cursor}) {
 export async function findIssueNumberFromJiraKey({issueKey}) {
     const result = await graphqlWithAuth(
         `query {
-           search(query: "repo:hmcts/roadmap-platform-operations in:body ${issueKey}", type: ISSUE, first: 10) {
+           search(query: "repo:hmcts/roadmap-platform-operations in:body ${issueKey}", type: ISSUE, first: 2) {
              nodes {
                ... on Issue {
                 id,
@@ -218,11 +220,16 @@ export async function findIssueNumberFromJiraKey({issueKey}) {
         throw new Error("Couldn't find matching issue: " + issueKey)
     }
 
+    let issue = null
     if (result.search.nodes.length > 1) {
-        throw new Error("Found multiple matching issues: " + result.search.nodes.map(node => node.title).join(', '))
+        console.log(`Found multiple matching issues:${result.search.nodes
+            .map(node => `NUM: ${node.number} Title: ${node.title}`)
+            .join(', ')}`
+        )
+        console.log("From the issues list in Github, delete duplicates")
     }
 
-    const issue = result.search.nodes.pop()
+    issue = getSingleItem(result.search.nodes)
 
     return {issueNumber: issue.number, title: issue.title, issueId: issue.id};
 }

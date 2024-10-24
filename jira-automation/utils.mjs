@@ -1,7 +1,3 @@
-export function isCrimeIssue(issueId) {
-    return issueId.startsWith('EI')
-}
-
 export function isCnpIssue(issueId) {
     return issueId.startsWith('DTSPO')
 }
@@ -10,8 +6,6 @@ export function addAreaLabels(issue) {
     const labels = issue.fields.labels
     if (isCnpIssue(issue.key)) {
         labels.push('CNP')
-    } else if (isCrimeIssue(issue.key)) {
-        labels.push('CRIME')
     } else {
         labels.push('common-platform')
     }
@@ -33,3 +27,9 @@ export function assertCredentialsPresent() {
         process.exit(1)
     }
 }
+
+// Updates should only happen on one issue
+export function getSingleItem(arry) {
+    return arry.at(arry.length - 1)
+}
+
