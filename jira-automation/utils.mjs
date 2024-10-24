@@ -27,3 +27,9 @@ export function assertCredentialsPresent() {
         process.exit(1)
     }
 }
+
+// Updates should only happen on one issue
+export function getSingleItem(arry) {
+    return arry.at(arry.length - 1)
+}
+
