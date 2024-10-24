@@ -223,7 +223,7 @@ export async function findIssueNumberFromJiraKey({issueKey}) {
     let issue = null
     if (result.search.nodes.length > 1) {
         console.log(`Found multiple matching issues:${result.search.nodes
-            .map(node => `ID: ${node.id} Title: ${node.title}`)
+            .map(node => `NUM: ${node.number} Title: ${node.title}`)
             .join(', ')}`
         )
         console.log("From the issues list in Github, delete duplicates")
