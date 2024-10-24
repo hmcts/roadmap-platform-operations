@@ -1,5 +1,4 @@
 import JiraApi from "jira-client";
-import {isCrimeIssue} from "./utils.mjs";
 
 const jira = new JiraApi({
     protocol: 'https',
@@ -9,8 +8,7 @@ const jira = new JiraApi({
     strictSSL: true
 });
 
-export const CNP_FILTER = 61018
-export const CRIME_FILTER = 63814
+export const CNP_FILTER = 64971 //61018
 
 export async function addJiraLabel(jiraKey) {
     try {
@@ -28,17 +26,12 @@ export async function addJiraLabel(jiraKey) {
 
 /**
  * Searches for and issue based on filter and id in Jira key.
- * Would use either the Crime or cnp filter depending on the issue key
  *
  * @param key
  * @returns {Promise<{issues: *[]}|JiraApi.JsonResponse>}
  */
 export async function searchForIssueToMigrate({key}) {
     let jqlQuery = `filter = ${CNP_FILTER} AND key = ${key}`
-
-    if (isCrimeIssue(`${key}`)) {
-        jqlQuery = `filter = ${CRIME_FILTER} AND key = ${key}`
-    }
 
     try {
         return await jira.searchJira(

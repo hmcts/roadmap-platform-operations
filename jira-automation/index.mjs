@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import {createGitHubIssue, lookupRepo} from "./github.mjs";
-import {CNP_FILTER, CRIME_FILTER, addJiraLabel, searchForIssuesToMigrate} from "./jira.mjs";
+import {CNP_FILTER, addJiraLabel, searchForIssuesToMigrate} from "./jira.mjs";
 import {addAreaLabels} from "./utils.mjs";
 
 import {assertCredentialsPresent} from "./utils.mjs";
@@ -10,11 +10,9 @@ assertCredentialsPresent()
 
 async function processIssues() {
     const {id, labels} = await lookupRepo()
-    const jiraFilters = [CNP_FILTER, CRIME_FILTER]
+    const jiraFilter = CNP_FILTER
 
-    for (const filterId of jiraFilters) {
-        await processIssuesByFilterId(id, labels, filterId)
-    }
+    await processIssuesByFilterId(id, labels, jiraFilter)
 
     console.log('All processing complete')
 }

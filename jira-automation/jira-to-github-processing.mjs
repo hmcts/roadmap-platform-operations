@@ -1,6 +1,6 @@
 import jira2md from 'jira2md'
 import dedent from 'dedent'
-import {hasItems, isCrimeIssue} from "./utils.mjs";
+import {hasItems} from "./utils.mjs";
 
 export function extractSummary(content) {
     const summarySection = extractSection({beginning: 'h3. Summary', end: 'h3. Intended Outcome', content})
@@ -84,13 +84,6 @@ export function jiraToGitHub({issueId, content}) {
     const summary = extractSummary(content)
     const intendedOutcome = extractIntendedOutcome(content)
     const impactOnTeams = extractImpactOnTeams(content)
-
-    /**
-     * Crime ticket without the template format content then use a default.
-     */
-    if (isCrimeIssue(issueId) && summary.length === 0) {
-        return extractDescriptionForCrime(issueId, content)
-    }
 
     return dedent(`${issueId}
     
