@@ -1,4 +1,4 @@
-name: Add Issue to Project Todo Column
+name: Add Issue to Project 📋 Backlog Column
 
 on:
   issues:
@@ -13,7 +13,7 @@ jobs:
       ORGANIZATION: hmcts
       PROJECT_NUMBER: 10
     steps:
-      - name: Add issue to project Todo column
+      - name: Add issue to project 📋 Backlog column
         run: |
           # Function to execute GraphQL queries
           gql_query() {
@@ -34,7 +34,7 @@ jobs:
               }
             }' "-f project=$PROJECT_ID -f issue=$ISSUE_ID" '.data.addProjectV2ItemById.item.id')
 
-          # Get Status field and Todo option IDs
+          # Get Status field and 📋 Backlog option IDs
           FIELD_DATA=$(gql_query '
             query($project: ID!) {
               node(id: $project) {
@@ -42,14 +42,14 @@ jobs:
               }
             }' "-f project=$PROJECT_ID" '.data.node.fields.nodes[] | select(.name == "Status")')
           STATUS_FIELD_ID=$(echo "$FIELD_DATA" | jq -r '.id')
-          TODO_OPTION_ID=$(echo "$FIELD_DATA" | jq -r '.options[] | select(.name == "Todo") | .id')
+          📋 Backlog_OPTION_ID=$(echo "$FIELD_DATA" | jq -r '.options[] | select(.name == "📋 Backlog") | .id')
 
-          # Set the Status to Todo
+          # Set the Status to 📋 Backlog
           RESULT=$(gql_query '
             mutation($project: ID!, $item: ID!, $field: ID!, $value: String!) {
               updateProjectV2ItemFieldValue(input: {
                 projectId: $project, itemId: $item, fieldId: $field, value: { singleSelectOptionId: $value }
               }) { projectV2Item { id } }
-            }' "-f project=$PROJECT_ID -f item=$ITEM_ID -f field=$STATUS_FIELD_ID -f value=$TODO_OPTION_ID" '.data.updateProjectV2ItemFieldValue.projectV2Item.id')
+            }' "-f project=$PROJECT_ID -f item=$ITEM_ID -f field=$STATUS_FIELD_ID -f value=$📋 Backlog_OPTION_ID" '.data.updateProjectV2ItemFieldValue.projectV2Item.id')
 
-          [ -n "$RESULT" ] && echo "Issue added to project and set to Todo status." || { echo "Error updating status: $RESULT"; exit 1; }
+          [ -n "$RESULT" ] && echo "Issue added to project and set to 📋 Backlog status." || { echo "Error updating status: $RESULT"; exit 1; }
