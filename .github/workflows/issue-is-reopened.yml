@@ -1,0 +1,76 @@
+name: Move Issue to 🏗 In progress When Reopened
+
+on:
+  issues:
+    types: [reopened]
+
+jobs:
+  move-to-in-progress:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.SECRET_PAT }}
+      ISSUE_ID: ${{ github.event.issue.node_id }}
+      ORGANIZATION: thomasthorntoncloud
+      PROJECT_NUMBER: 1
+    steps:
+      - name: Move issue to 🏗 In progress
+        run: |
+          # Function to execute GraphQL queries
+          gql_query() {
+            gh api graphql -f query="$1" $2 --jq "$3"
+          }
+
+          # Get project ID
+          PROJECT_ID=$(gql_query '
+            query($org: String!, $num: Int!) {
+              organization(login: $org) { projectV2(number: $num) { id } }
+            }' "-f org=$ORGANIZATION -F num=$PROJECT_NUMBER" '.data.organization.projectV2.id')
+
+          # Get Status field and 🏗 In progress option IDs
+          FIELD_DATA=$(gql_query '
+            query($project: ID!) {
+              node(id: $project) {
+                ... on ProjectV2 { fields(first: 20) { nodes { ...on ProjectV2SingleSelectField { id name options { id name } } } } }
+              }
+            }' "-f project=$PROJECT_ID" '.data.node.fields.nodes[] | select(.name == "Status")')
+          STATUS_FIELD_ID=$(echo "$FIELD_DATA" | jq -r '.id')
+          IN_PROGRESS_OPTION_ID=$(echo "$FIELD_DATA" | jq -r '.options[] | select(.name == "🏗 In progress") | .id')
+
+          # Function to find item ID with pagination
+          find_item_id() {
+            local cursor=""
+            while true; do
+              local result=$(gql_query '
+                query($project: ID!, $cursor: String) {
+                  node(id: $project) {
+                    ... on ProjectV2 {
+                      items(first: 100, after: $cursor) {
+                        pageInfo { hasNextPage endCursor }
+                        nodes { id content { ...on Issue { id } } }
+                      }
+                    }
+                  }
+                }' "-f project=$PROJECT_ID -f cursor=$cursor" '.data.node.items')
+              
+              ITEM_ID=$(echo "$result" | jq -r --arg ISSUE_ID "$ISSUE_ID" '.nodes[] | select(.content.id == $ISSUE_ID) | .id')
+              [ -n "$ITEM_ID" ] && break
+
+              cursor=$(echo "$result" | jq -r '.pageInfo.endCursor')
+              [ "$(echo "$result" | jq -r '.pageInfo.hasNextPage')" != "true" ] && break
+            done
+            echo "$ITEM_ID"
+          }
+
+          ITEM_ID=$(find_item_id)
+
+          [ -z "$ITEM_ID" ] && { echo "Error: Issue not found in project."; exit 0; }
+
+          # Update issue status to 🏗 In progress
+          RESULT=$(gql_query '
+            mutation($project: ID!, $item: ID!, $field: ID!, $value: String!) {
+              updateProjectV2ItemFieldValue(input: {
+                projectId: $project, itemId: $item, fieldId: $field, value: { singleSelectOptionId: $value }
+              }) { projectV2Item { id } }
+            }' "-f project=$PROJECT_ID -f item=$ITEM_ID -f field=$STATUS_FIELD_ID -f value=$IN_PROGRESS_OPTION_ID" '.data.updateProjectV2ItemFieldValue.projectV2Item.id')
+
+          [ -n "$RESULT" ] && echo "Issue moved to 🏗 In progress status." || { echo "Error updating status: $RESULT"; exit 1; }
