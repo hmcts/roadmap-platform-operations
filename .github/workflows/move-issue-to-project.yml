@@ -1,0 +1,55 @@
+name: Add Issue to Project Todo Column
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ISSUE_ID: ${{ github.event.issue.node_id }}
+      ORGANIZATION: hmcts
+      PROJECT_NUMBER: 10
+    steps:
+      - name: Add issue to project Todo column
+        run: |
+          # Function to execute GraphQL queries
+          gql_query() {
+            gh api graphql -f query="$1" $2 --jq "$3"
+          }
+
+          # Get project ID
+          PROJECT_ID=$(gql_query '
+            query($org: String!, $num: Int!) {
+              organization(login: $org) { projectV2(number: $num) { id } }
+            }' "-f org=$ORGANIZATION -F num=$PROJECT_NUMBER" '.data.organization.projectV2.id')
+
+          # Add issue to project
+          ITEM_ID=$(gql_query '
+            mutation($project: ID!, $issue: ID!) {
+              addProjectV2ItemById(input: {projectId: $project, contentId: $issue}) {
+                item { id }
+              }
+            }' "-f project=$PROJECT_ID -f issue=$ISSUE_ID" '.data.addProjectV2ItemById.item.id')
+
+          # Get Status field and Todo option IDs
+          FIELD_DATA=$(gql_query '
+            query($project: ID!) {
+              node(id: $project) {
+                ... on ProjectV2 { fields(first: 20) { nodes { ...on ProjectV2SingleSelectField { id name options { id name } } } } }
+              }
+            }' "-f project=$PROJECT_ID" '.data.node.fields.nodes[] | select(.name == "Status")')
+          STATUS_FIELD_ID=$(echo "$FIELD_DATA" | jq -r '.id')
+          TODO_OPTION_ID=$(echo "$FIELD_DATA" | jq -r '.options[] | select(.name == "Todo") | .id')
+
+          # Set the Status to Todo
+          RESULT=$(gql_query '
+            mutation($project: ID!, $item: ID!, $field: ID!, $value: String!) {
+              updateProjectV2ItemFieldValue(input: {
+                projectId: $project, itemId: $item, fieldId: $field, value: { singleSelectOptionId: $value }
+              }) { projectV2Item { id } }
+            }' "-f project=$PROJECT_ID -f item=$ITEM_ID -f field=$STATUS_FIELD_ID -f value=$TODO_OPTION_ID" '.data.updateProjectV2ItemFieldValue.projectV2Item.id')
+
+          [ -n "$RESULT" ] && echo "Issue added to project and set to Todo status." || { echo "Error updating status: $RESULT"; exit 1; }
