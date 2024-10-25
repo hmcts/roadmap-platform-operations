@@ -42,7 +42,7 @@ jobs:
               }
             }' "-f project=$PROJECT_ID" '.data.node.fields.nodes[] | select(.name == "Status")')
           STATUS_FIELD_ID=$(echo "$FIELD_DATA" | jq -r '.id')
-          📋 Backlog_OPTION_ID=$(echo "$FIELD_DATA" | jq -r '.options[] | select(.name == "📋 Backlog") | .id')
+          BACKLOG_OPTION_ID=$(echo "$FIELD_DATA" | jq -r '.options[] | select(.name == "📋 Backlog") | .id')
 
           # Set the Status to 📋 Backlog
           RESULT=$(gql_query '
@@ -50,6 +50,6 @@ jobs:
               updateProjectV2ItemFieldValue(input: {
                 projectId: $project, itemId: $item, fieldId: $field, value: { singleSelectOptionId: $value }
               }) { projectV2Item { id } }
-            }' "-f project=$PROJECT_ID -f item=$ITEM_ID -f field=$STATUS_FIELD_ID -f value=$📋 Backlog_OPTION_ID" '.data.updateProjectV2ItemFieldValue.projectV2Item.id')
+            }' "-f project=$PROJECT_ID -f item=$ITEM_ID -f field=$STATUS_FIELD_ID -f value=$BACKLOG_OPTION_ID" '.data.updateProjectV2ItemFieldValue.projectV2Item.id')
 
           [ -n "$RESULT" ] && echo "Issue added to project and set to 📋 Backlog status." || { echo "Error updating status: $RESULT"; exit 1; }
