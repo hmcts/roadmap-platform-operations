@@ -10,8 +10,8 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.SECRET_PAT }}
       ISSUE_ID: ${{ github.event.issue.node_id }}
-      ORGANIZATION: thomasthorntoncloud
-      PROJECT_NUMBER: 1
+      ORGANIZATION: hmcts
+      PROJECT_NUMBER: 10
     steps:
       - name: Move issue to 🏗 In progress
         run: |
