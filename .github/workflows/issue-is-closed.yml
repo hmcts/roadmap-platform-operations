@@ -31,33 +31,17 @@ jobs:
           echo "STATUS_FIELD_ID: $STATUS_FIELD_ID"
           echo "DONE_OPTION_ID: $DONE_OPTION_ID"
 
-          # Find the item ID for the closed issue, accommodating more than 100 items (pagination)
+          # Find the item ID for the closed issue
           ITEM_ID=""
-          CURSOR=""
+          echo "Fetching items..."
+          ITEMS_RESPONSE=$(gh project item-list $PROJECT_NUMBER --owner $PROJECT_OWNER --format json --limit 10000)
 
-          while [ -z "$ITEM_ID" ]; do
-            echo "Fetching items with cursor: $CURSOR"
-            ITEMS_RESPONSE=$(gh project item-list $PROJECT_NUMBER --owner $PROJECT_OWNER --format json --limit 10000 ${CURSOR:+--cursor "$CURSOR"})
-            
-            # Extract the item ID if the issue is found
-            ITEM_ID=$(echo "$ITEMS_RESPONSE" | jq -r --arg ISSUE_NUMBER "$ISSUE_NUMBER" '.items[] | select(.content.number == ($ISSUE_NUMBER | tonumber)) | .id')
-            
-            if [ -n "$ITEM_ID" ]; then
-              echo "Item found with ID: $ITEM_ID"
-              break
-            fi
-            
-            # Check if there are more pages
-            HAS_NEXT_PAGE=$(echo "$ITEMS_RESPONSE" | jq -r '.pageInfo.hasNextPage')
-            CURSOR=$(echo "$ITEMS_RESPONSE" | jq -r '.pageInfo.endCursor')
-            
-            if [ "$HAS_NEXT_PAGE" != "true" ] || [ "$CURSOR" = "null" ]; then
-              echo "No more pages to fetch"
-              break
-            fi
-          done
+          # Extract the item ID if the issue is found
+          ITEM_ID=$(echo "$ITEMS_RESPONSE" | jq -r --arg ISSUE_NUMBER "$ISSUE_NUMBER" '.items[] | select(.content.number == ($ISSUE_NUMBER | tonumber)) | .id')
 
-          if [ -z "$ITEM_ID" ]; then
+          if [ -n "$ITEM_ID" ]; then
+            echo "Item found with ID: $ITEM_ID"
+          else
             echo "Error: Could not find the issue in the project. Skipping status update."
             exit 0
           fi
