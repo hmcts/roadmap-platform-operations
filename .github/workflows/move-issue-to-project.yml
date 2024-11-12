@@ -44,20 +44,47 @@ jobs:
             exit 1
           fi
 
-          # Set the Status to 📋 Backlog
+          # Set the Status to 📋 Backlog using pagination
           echo "Setting issue status to 📋 Backlog..."
-          RESULT=$(gh project item-edit $PROJECT_NUMBER \
-            --id "$ITEM_ID" \
-            --project-id "$PROJECT_ID" \
-            --field-id "$STATUS_FIELD_ID" \
-            --single-select-option-id "$TODO_OPTION_ID" \
-            --format json)
+          cursor=""
+          page=1
+          
+          while true; do
+            echo "Fetching page $page..."
+            query_result=""
+            
+            if [ -z "$cursor" ]; then
+              query_result=$(gh project item-list $PROJECT_NUMBER --owner "$PROJECT_OWNER" --limit 100 --format json)
+            else
+              query_result=$(gh project item-list $PROJECT_NUMBER --owner "$PROJECT_OWNER" --limit 100 --format json --cursor "$cursor")
+            fi
 
-          echo "RESULT: $RESULT"
+            echo "Page $page: $(echo "$query_result" | jq '.items | length') items"
+            
+            # Update the issue status if found in this page
+            RESULT=$(gh project item-edit $PROJECT_NUMBER \
+              --id "$ITEM_ID" \
+              --project-id "$PROJECT_ID" \
+              --field-id "$STATUS_FIELD_ID" \
+              --single-select-option-id "$TODO_OPTION_ID" \
+              --format json)
 
-          if echo "$RESULT" | jq -e '.id' > /dev/null; then
-            echo "Issue successfully added to project and set to 📋 Backlog status."
-          else
-            echo "Error updating issue status: $RESULT"
-            exit 1
-          fi
+            if echo "$RESULT" | jq -e '.id' > /dev/null; then
+              echo "Issue successfully added to project and set to 📋 Backlog status."
+              exit 0
+            fi
+
+            # Check if there are more pages
+            has_next_page=$(echo "$query_result" | jq -r '.hasNextPage')
+            cursor=$(echo "$query_result" | jq -r '.nextCursor')
+
+            echo "Has next page: $has_next_page"
+            echo "Next cursor: $cursor"
+
+            if [ "$has_next_page" != "true" ] || [ "$cursor" = "null" ]; then
+              echo "Error: Could not find the issue in the project after checking all pages."
+              exit 1
+            fi
+
+            ((page++))
+          done
