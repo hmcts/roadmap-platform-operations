@@ -54,9 +54,9 @@ jobs:
             query_result=""
             
             if [ -z "$cursor" ]; then
-              query_result=$(gh project item-list $PROJECT_NUMBER --owner "$PROJECT_OWNER" --limit 100 --format json)
+              query_result=$(gh project item-list $PROJECT_NUMBER --owner "$PROJECT_OWNER" --limit 10000 --format json)
             else
-              query_result=$(gh project item-list $PROJECT_NUMBER --owner "$PROJECT_OWNER" --limit 100 --format json --cursor "$cursor")
+              query_result=$(gh project item-list $PROJECT_NUMBER --owner "$PROJECT_OWNER" --limit 10000 --format json --cursor "$cursor")
             fi
 
             echo "Page $page: $(echo "$query_result" | jq '.items | length') items"
