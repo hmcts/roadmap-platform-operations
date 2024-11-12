@@ -35,7 +35,7 @@ jobs:
           ITEM_ID=""
           CURSOR=""
 
-          while [ -z "$ITEM_ID" ]; do
+          while true; do
             echo "Fetching items with cursor: $CURSOR"
             ITEMS_RESPONSE=$(gh project item-list $PROJECT_NUMBER --owner $PROJECT_OWNER --format json --limit 100 ${CURSOR:+--cursor "$CURSOR"})
             
@@ -51,7 +51,7 @@ jobs:
             HAS_NEXT_PAGE=$(echo "$ITEMS_RESPONSE" | jq -r '.pageInfo.hasNextPage')
             CURSOR=$(echo "$ITEMS_RESPONSE" | jq -r '.pageInfo.endCursor')
             
-            if [ "$HAS_NEXT_PAGE" != "true" ] || [ "$CURSOR" = "null" ]; then
+            if [ "$HAS_NEXT_PAGE" != "true" ] || [ -z "$CURSOR" ] || [ "$CURSOR" = "null" ]; then
               echo "No more pages to fetch"
               break
             fi
