@@ -27,26 +27,17 @@ jobs:
           STATUS_FIELD=$(echo "$FIELDS" | jq -r '.fields[] | select(.name == "Status")')
           STATUS_FIELD_ID=$(echo "$STATUS_FIELD" | jq -r '.id')
           INPROGRESS_OPTION_ID=$(echo "$STATUS_FIELD" | jq -r '.options[] | select(.name == "🏗 In progress") | .id')
-
+          
           echo "STATUS_FIELD_ID: $STATUS_FIELD_ID"
           echo "INPROGRESS_OPTION_ID: $INPROGRESS_OPTION_ID"
 
           # Find the item ID for the closed issue, accommodating more than 100 items
           ITEM_ID=""
           CURSOR=""
-          PAGE_COUNT=0
-          TOTAL_ITEMS=0
 
-          while true; do
+          while [ -z "$ITEM_ID" ]; do
             echo "Fetching items with cursor: $CURSOR"
-            ITEMS_RESPONSE=$(gh project item-list $PROJECT_NUMBER --owner $PROJECT_OWNER --format json --limit 100 ${CURSOR:+--after "$CURSOR"})
-            
-            # Log the number of items in this page
-            ITEMS_COUNT=$(echo "$ITEMS_RESPONSE" | jq '.items | length')
-            TOTAL_ITEMS=$((TOTAL_ITEMS + ITEMS_COUNT))
-            PAGE_COUNT=$((PAGE_COUNT + 1))
-            echo "Page $PAGE_COUNT: $ITEMS_COUNT items"
-            echo "Total items so far: $TOTAL_ITEMS"
+            ITEMS_RESPONSE=$(gh project item-list $PROJECT_NUMBER --owner $PROJECT_OWNER --format json --limit 10000 ${CURSOR:+--cursor "$CURSOR"})
             
             # Extract the item ID if the issue is found
             ITEM_ID=$(echo "$ITEMS_RESPONSE" | jq -r --arg ISSUE_NUMBER "$ISSUE_NUMBER" '.items[] | select(.content.number == ($ISSUE_NUMBER | tonumber)) | .id')
@@ -60,16 +51,10 @@ jobs:
             HAS_NEXT_PAGE=$(echo "$ITEMS_RESPONSE" | jq -r '.pageInfo.hasNextPage')
             CURSOR=$(echo "$ITEMS_RESPONSE" | jq -r '.pageInfo.endCursor')
             
-            echo "Has next page: $HAS_NEXT_PAGE"
-            echo "Next cursor: $CURSOR"
-            
-            if [ "$HAS_NEXT_PAGE" != "true" ] || [ -z "$CURSOR" ] || [ "$CURSOR" = "null" ]; then
+            if [ "$HAS_NEXT_PAGE" != "true" ] || [ "$CURSOR" = "null" ]; then
               echo "No more pages to fetch"
               break
             fi
-            
-            # Optional: Add a small delay to avoid hitting rate limits
-            sleep 1
           done
 
           if [ -z "$ITEM_ID" ]; then
