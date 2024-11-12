@@ -9,47 +9,55 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.SECRET_PAT }}
-      ISSUE_ID: ${{ github.event.issue.node_id }}
-      ORGANIZATION: hmcts
+      PROJECT_OWNER: hmcts
       PROJECT_NUMBER: 10
+      ISSUE_URL: ${{ github.event.issue.html_url }}
     steps:
       - name: Add issue to project 📋 Backlog column
         run: |
-          # Function to execute GraphQL queries
-          gql_query() {
-            gh api graphql -f query="$1" $2 --jq "$3"
-          }
-
           # Get project ID
-          PROJECT_ID=$(gql_query '
-            query($org: String!, $num: Int!) {
-              organization(login: $org) { projectV2(number: $num) { id } }
-            }' "-f org=$ORGANIZATION -F num=$PROJECT_NUMBER" '.data.organization.projectV2.id')
+          PROJECT_ID=$(gh project view $PROJECT_NUMBER --owner $PROJECT_OWNER --format json | jq -r '.id')
+          echo "Project ID: $PROJECT_ID"
 
           # Add issue to project
-          ITEM_ID=$(gql_query '
-            mutation($project: ID!, $issue: ID!) {
-              addProjectV2ItemById(input: {projectId: $project, contentId: $issue}) {
-                item { id }
-              }
-            }' "-f project=$PROJECT_ID -f issue=$ISSUE_ID" '.data.addProjectV2ItemById.item.id')
+          echo "Adding issue to project..."
+          ITEM_ID=$(gh project item-add $PROJECT_NUMBER --owner "$PROJECT_OWNER" --url "$ISSUE_URL" --format json | jq -r '.id')
+          echo "ITEM_ID: $ITEM_ID"
 
-          # Get Status field and 📋 Backlog option IDs
-          FIELD_DATA=$(gql_query '
-            query($project: ID!) {
-              node(id: $project) {
-                ... on ProjectV2 { fields(first: 20) { nodes { ...on ProjectV2SingleSelectField { id name options { id name } } } } }
-              }
-            }' "-f project=$PROJECT_ID" '.data.node.fields.nodes[] | select(.name == "Status")')
-          STATUS_FIELD_ID=$(echo "$FIELD_DATA" | jq -r '.id')
-          BACKLOG_OPTION_ID=$(echo "$FIELD_DATA" | jq -r '.options[] | select(.name == "📋 Backlog") | .id')
+          if [ -z "$ITEM_ID" ]; then
+            echo "Error: Failed to add issue to project."
+            exit 1
+          fi
+
+          # Get the Status field ID and 📋 Backlog option ID
+          echo "Fetching project fields..."
+          FIELDS=$(gh project field-list $PROJECT_NUMBER --owner "$PROJECT_OWNER" --format json)
+          STATUS_FIELD=$(echo "$FIELDS" | jq -r '.fields[] | select(.name == "Status")')
+          STATUS_FIELD_ID=$(echo "$STATUS_FIELD" | jq -r '.id')
+          TODO_OPTION_ID=$(echo "$STATUS_FIELD" | jq -r '.options[] | select(.name == "📋 Backlog") | .id')
+
+          echo "STATUS_FIELD_ID: $STATUS_FIELD_ID"
+          echo "TODO_OPTION_ID: $TODO_OPTION_ID"
+
+          if [ -z "$STATUS_FIELD_ID" ] || [ -z "$TODO_OPTION_ID" ]; then
+            echo "Error: Could not find Status field or 📋 Backlog option."
+            exit 1
+          fi
 
           # Set the Status to 📋 Backlog
-          RESULT=$(gql_query '
-            mutation($project: ID!, $item: ID!, $field: ID!, $value: String!) {
-              updateProjectV2ItemFieldValue(input: {
-                projectId: $project, itemId: $item, fieldId: $field, value: { singleSelectOptionId: $value }
-              }) { projectV2Item { id } }
-            }' "-f project=$PROJECT_ID -f item=$ITEM_ID -f field=$STATUS_FIELD_ID -f value=$BACKLOG_OPTION_ID" '.data.updateProjectV2ItemFieldValue.projectV2Item.id')
+          echo "Setting issue status to 📋 Backlog..."
+          RESULT=$(gh project item-edit $PROJECT_NUMBER \
+            --id "$ITEM_ID" \
+            --project-id "$PROJECT_ID" \
+            --field-id "$STATUS_FIELD_ID" \
+            --single-select-option-id "$TODO_OPTION_ID" \
+            --format json)
 
-          [ -n "$RESULT" ] && echo "Issue added to project and set to 📋 Backlog status." || { echo "Error updating status: $RESULT"; exit 1; }
+          echo "RESULT: $RESULT"
+
+          if echo "$RESULT" | jq -e '.id' > /dev/null; then
+            echo "Issue successfully added to project and set to 📋 Backlog status."
+          else
+            echo "Error updating issue status: $RESULT"
+            exit 1
+          fi
