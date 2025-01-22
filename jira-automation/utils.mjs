@@ -1,15 +1,35 @@
+const INITIATIVE = 'Initiative';
+const EPIC = 'Epic';
+
 export function isCnpIssue(issueId) {
     return issueId.startsWith('DTSPO')
 }
 
+export function isInitiative(issue) {
+    return issue.fields.issuetype.name === INITIATIVE;
+}
+
+export function isEpic(issue) {
+    return issue.fields.issuetype.name === EPIC;
+}
+
 export function addAreaLabels(issue) {
-    const labels = issue.fields.labels
+    const labels = issue.fields.labels;
+
+    // Add CNP label or default if not CNP
     if (isCnpIssue(issue.key)) {
-        labels.push('CNP')
+        labels.push('CNP');
     } else {
-        labels.push('common-platform')
+        labels.push('common-platform');
     }
-    return labels
+
+    // Add Initiative or Epic label
+    if (isInitiative(issue)) {
+        labels.push(INITIATIVE);
+    } else if (isEpic(issue)) {
+        labels.push(EPIC);
+    }
+    return labels;
 }
 
 export function hasItems(arr) {

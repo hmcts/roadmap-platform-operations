@@ -8,15 +8,24 @@ import {assertCredentialsPresent} from "./utils.mjs";
 
 assertCredentialsPresent()
 
+/**
+ * Process issues by filter id
+ * @returns {Promise<void>}
+ */
 async function processIssues() {
     const {id, labels} = await lookupRepo()
-    const jiraFilter = CNP_FILTER
-
-    await processIssuesByFilterId(id, labels, jiraFilter)
-
+    await processIssuesByFilterId(id, labels, CNP_FILTER)
     console.log('All processing complete')
 }
 
+/**
+ * Process issues by filter id. Adds the relevant labels to the issue, creates a GitHub issue
+ * and also adds a label to the Jira issue to indicate that it has been processed and now on the roadmap.
+ * @param id
+ * @param labels
+ * @param filterId
+ * @returns {Promise<void>}
+ */
 async function processIssuesByFilterId(id, labels, filterId) {
     const results = await searchForIssuesToMigrate(filterId)
     console.log('Found', results.issues.length, 'issue(s) to migrate')
