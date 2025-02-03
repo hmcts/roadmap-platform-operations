@@ -30,6 +30,7 @@ async function processIssues() {
 
     const converted = jiraToGitHub({
         issueId: issue.key,
+        issueType: issue.fields.issuetype.name,
         content: issue.fields.description
     })
 

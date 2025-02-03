@@ -1,5 +1,5 @@
-const INITIATIVE = 'Initiative';
-const EPIC = 'Epic';
+export const INITIATIVE = 'Initiative';
+export const EPIC = 'Epic';
 
 export function isCnpIssue(issueId) {
     return issueId.startsWith('DTSPO')

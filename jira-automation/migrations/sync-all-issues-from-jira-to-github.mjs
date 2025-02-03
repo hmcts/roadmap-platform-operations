@@ -54,6 +54,7 @@ async function run() {
 
     const converted = jiraToGitHub({
       issueId: jiraIssue.key,
+      issueType: jiraIssue.fields.issuetype.name,
       content: jiraIssue.fields.description
   })
 
