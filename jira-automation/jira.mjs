@@ -8,7 +8,7 @@ const jira = new JiraApi({
     strictSSL: true
 });
 
-export const CNP_FILTER = 66444 //64971 //61018
+export const CNP_FILTER = 64971 //61018
 
 export async function addJiraLabel(jiraKey) {
     try {
