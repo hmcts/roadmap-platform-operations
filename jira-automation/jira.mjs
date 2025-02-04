@@ -37,7 +37,7 @@ export async function searchForIssueToMigrate({key}) {
         return await jira.searchJira(
             jqlQuery,
             {
-                fields: ['summary', 'labels']
+                fields: ['summary', 'labels', 'issuetype']
             }
         )
     } catch (err) {
@@ -52,7 +52,7 @@ export async function getIssue({key}) {
     return await jira.getIssue(
         key,
         {
-            fields: ['summary', 'labels', 'description']
+            fields: ['summary', 'labels', 'description', 'issuetype']
         }
     )
 }
@@ -66,12 +66,12 @@ export async function getIssue({key}) {
  * @returns {Promise<{issues: *[]}|JiraApi.JsonResponse>}
  */
 export async function searchForIssuesToMigrate(filterId = CNP_FILTER) {
-    const jqlQuery = `filter = ${filterId}`
+    const jqlQuery = `filter=${filterId}`
     try {
         return await jira.searchJira(
             jqlQuery,
             {
-                fields: ['summary', 'labels']
+                fields: ['summary', 'labels', 'issuetype']
             }
         )
     } catch (err) {

@@ -1,23 +1,48 @@
 import jira2md from 'jira2md'
 import dedent from 'dedent'
-import {hasItems} from "./utils.mjs";
+import {EPIC, hasItems} from "./utils.mjs";
 
 export function extractSummary(content) {
-    const summarySection = extractSection({beginning: 'h3. Summary', end: 'h3. Intended Outcome', content})
+    let summarySection = extractSection({
+        beginning: 'h3. Summary',
+        end: 'h3. Intended Outcome', content
+    })
+    if (!summarySection) {
+        summarySection = extractSection({
+            beginning: 'h3. Summary',
+            end: 'h3. Delivery Requirements', content
+        })
+    }
     return jira2md.to_markdown(summarySection)
 }
 
 export function extractIntendedOutcome(content) {
-    const summarySection = extractSection({beginning: 'h3. Intended Outcome', end: 'h3. Impact on Teams', content})
+    let summarySection = extractSection({
+        beginning: 'h3. Intended Outcome',
+        end: 'h3. Impact on Teams', content
+    })
+    if (!summarySection) {
+        summarySection = extractSection({
+            beginning: 'h3. Delivery Requirements',
+            end: 'h3. Technical Details', content
+        })
+    }
     return jira2md.to_markdown(summarySection)
 }
 
-export function extractImpactOnTeams(content) {
-    const summarySection = extractSection({
+export function extractImpactOnTeams(content, issueType) {
+    let summarySection = extractSection({
         beginning: 'h3. Impact on Teams',
         end: 'h3. Additional information',
         content
     })
+    if(issueType === EPIC) {
+        summarySection = extractSection({
+            beginning: 'h3. Impact on Teams',
+            end: 'h3. Dependencies',
+            content
+        })
+    }
     return jira2md.to_markdown(summarySection)
 }
 
@@ -42,8 +67,7 @@ export function extractSection({beginning, end, content}) {
     const result = content.substring(start + beginning.length, finish).trim()
 
     // replace @mentions with `@mention` so that we don't notify people accidentally
-    const replacedMentions = result.replace(/@([a-zA-Z0-9_]+)/g, '`$1`')
-    return replacedMentions
+    return result.replace(/@([a-zA-Z0-9_]+)/g, '`$1`')
 }
 
 export function extractDescriptionForCrime(issueId, content) {
@@ -59,7 +83,15 @@ export function extractDescriptionForCrime(issueId, content) {
 
 export function extractPrioritisationTotalScore(content) {
     let score = "0";
-    const endSection = dedent(extractEndSection({beginning: 'h3. Prioritisation Matrix', content}))
+    let endSection = dedent(extractEndSection({
+        beginning: 'h3. Prioritisation Matrix', content
+    }))
+
+    if (!endSection) {
+        endSection = dedent(extractEndSection({
+            beginning: 'h3. Epic Scoring', content
+        }))
+    }
 
     let values = endSection
         .split('\n')
@@ -79,19 +111,23 @@ export function extractPrioritisationTotalScore(content) {
 }
 
 
-export function jiraToGitHub({issueId, content}) {
+export function jiraToGitHub({issueId, issueType, content}) {
 
     const summary = extractSummary(content)
     const intendedOutcome = extractIntendedOutcome(content)
-    const impactOnTeams = extractImpactOnTeams(content)
+    const impactOnTeams = extractImpactOnTeams(content, issueType)
 
+    let intendedOutcomeHeader = `## Intended Outcome`
+    if (issueType === EPIC) {
+        intendedOutcomeHeader = `## Delivery Requirements`
+    }
     return dedent(`${issueId}
     
     ${summary ? `## Summary
 
     ${summary}` : ''}
 
-    ${intendedOutcome ? `## Intended Outcome
+    ${intendedOutcome ? `${intendedOutcomeHeader}
 
     ${intendedOutcome}` : ''}
 

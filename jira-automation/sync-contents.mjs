@@ -23,7 +23,6 @@ async function processIssues() {
         issue = await getIssue({key: issueKey})
     } catch (err) {
         console.log("Error searching for issue in jira", issueKey, err)
-
         process.exit(1)
     }
 
@@ -31,6 +30,7 @@ async function processIssues() {
 
     const converted = jiraToGitHub({
         issueId: issue.key,
+        issueType: issue.fields.issuetype.name,
         content: issue.fields.description
     })
 
