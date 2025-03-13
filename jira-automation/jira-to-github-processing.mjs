@@ -1,6 +1,6 @@
 import jira2md from 'jira2md'
 import dedent from 'dedent'
-import {EPIC, hasItems} from "./utils.mjs";
+import {hasItems} from "./utils.mjs";
 
 export function extractSummary(content) {
     let summarySection = extractSection({
@@ -36,13 +36,6 @@ export function extractImpactOnTeams(content, issueType) {
         end: 'h3. Additional information',
         content
     })
-    if(issueType === EPIC) {
-        summarySection = extractSection({
-            beginning: 'h3. Impact on Teams',
-            end: 'h3. Dependencies',
-            content
-        })
-    }
     return jira2md.to_markdown(summarySection)
 }
 
@@ -68,17 +61,6 @@ export function extractSection({beginning, end, content}) {
 
     // replace @mentions with `@mention` so that we don't notify people accidentally
     return result.replace(/@([a-zA-Z0-9_]+)/g, '`$1`')
-}
-
-export function extractDescriptionForCrime(issueId, content) {
-    content = content.replace(/@([a-zA-Z0-9_]+)/g, '`$1`')
-    content = jira2md.to_markdown(content)
-    return dedent(`${issueId}
-    
-    ${content ? `## Epic Description
-
-    ${content}` : ''}
-    `)
 }
 
 export function extractPrioritisationTotalScore(content) {
@@ -118,9 +100,7 @@ export function jiraToGitHub({issueId, issueType, content}) {
     const impactOnTeams = extractImpactOnTeams(content, issueType)
 
     let intendedOutcomeHeader = `## Intended Outcome`
-    if (issueType === EPIC) {
-        intendedOutcomeHeader = `## Delivery Requirements`
-    }
+
     return dedent(`${issueId}
     
     ${summary ? `## Summary
