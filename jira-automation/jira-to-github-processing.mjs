@@ -69,12 +69,6 @@ export function extractPrioritisationTotalScore(content) {
         beginning: 'h3. Prioritisation Matrix', content
     }))
 
-    if (!endSection) {
-        endSection = dedent(extractEndSection({
-            beginning: 'h3. Epic Scoring', content
-        }))
-    }
-
     let values = endSection
         .split('\n')
         .filter(line => line.trim().startsWith('Total:') || line.trim().startsWith('Score:'));

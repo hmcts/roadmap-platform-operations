@@ -82,7 +82,7 @@ const cnp_issue = {
 }
 
 describe('jira-to-github-processing for CNP', t => {
-  it('Initiative: extracts summary from Jira issue ', t => {
+  it('Extracts summary from Jira issue ', t => {
 
     const result = extractSummary(cnp_issue.fields.description)
 
@@ -96,7 +96,7 @@ describe('jira-to-github-processing for CNP', t => {
     assert.equal(result, `*Use data in CSV file format to review and understand how many SKu's are running every hours and especially at night so an average can be used to purchase the desired RI's for CFT.*\n    \n    *This should cover both virtual machines and scale sets.*\n    \n    *Every hour should have a new CSV file*`)
   })
 
-  it('Initiative: converts jira description to github markdown', t => {
+  it('Converts jira description to github markdown', t => {
     const result = jiraToGitHub({
         issueId: cnp_issue.key,
         issueType:  cnp_issue.fields.issuetype.name,
