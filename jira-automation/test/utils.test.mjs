@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import {describe, it} from 'node:test'
 
-import {isCnpIssue, addAreaLabels, isInitiative, isEpic} from '../utils.mjs'
+import {isCnpIssue, addAreaLabels} from '../utils.mjs'
 
 
 describe('Utility functions', t => {
@@ -29,42 +29,6 @@ describe('Utility functions', t => {
         }
         const result = addAreaLabels(issue)
         assert.deepStrictEqual(result, ["CNP"])
-    })
-
-    it('should return true is the correct issue type for Initiative', () => {
-        const issue = {
-            fields: {
-                issuetype: {
-                    name: 'Initiative'
-                }
-            }
-        }
-        const result = isInitiative(issue)
-        assert.equal(result, true)
-    })
-
-    it('should return false is the correct issue type for Epic', () => {
-        const issue = {
-            fields: {
-                issuetype: {
-                    name: 'Epic'
-                }
-            }
-        }
-        const result = isEpic(issue)
-        assert.equal(result, true)
-    })
-
-    it('should fail if no issuetype', () => {
-        const issue = {
-            fields: {
-                issuetype: {
-                    id: null
-                }
-            }
-        }
-        const result = isInitiative(issue)
-        assert.equal(result, false)
     })
 
 })

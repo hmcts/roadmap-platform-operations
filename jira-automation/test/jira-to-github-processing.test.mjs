@@ -81,74 +81,22 @@ const cnp_issue = {
   }
 }
 
-const epic_issue = {
-  key: 'DTSPO-22548',
-  fields: {
-    id: '10000',
-    labels: [],
-    issuetype: { name: 'Epic' },
-    summary: 'This is a summary for an epic issue',
-    description: `h3. Summary
-
-    Summary of the requirement here.
-    h3. Delivery Requirements
-    
-    Delivery Requirements content here
-    
-    h3. Technical Details
-    
-    Technical Details content here.
-    
-    _This should cover both virtual machines and scale sets._
-    
-    _Every hour should have a new CSV file_
-    
-    h3. Impact on Teams
-    _No impact_
-
-    h3. Dependencies
-    
-    Dependencies content here
-    
-    h3. Cost Savings
-    
-    Cost Savings content here
-    
-    _Are there any potential cost saving by delivering this epic? N/A if none determined_
-    h3. Actionable Recommendations:
-     * *Maximise cost savings:* Epics with high cost savings should be prioritised if they offer a significant return on investment, whether through reducing cloud/infrastructure costs, improving efficiency, or automating manual processes.
-     * *Clarify acceptance criteria early:* Ensure that all Epics have clear, measurable acceptance criteria, particularly if they’re tied to financial or platform outcomes. Well-defined criteria are crucial to ensure that cost-saving features are actually measurable and delivered effectively.
-     * *Optimise dependencies:* For Epics with high dependencies, early alignment with teams can reduce delays and ensure smoother execution, directly impacting time-to-value.
-     * *Manage technical complexity:* Track technical risk and complexity carefully—high-complexity Epics may require more planning or experimentation (e.g., a spike or a proof of concepts) before proceeding to mitigate risks, especially in cases where the Epic has cost-saving potential tied to technical innovation.
-    
-    [The Scoring Matrix - Epics|https://tools.hmcts.net/confluence/display/DTSPO/The+Scoring+Matrix+-+Epics]
-    h3. Epic Scoring
-    |*Criteria*|*Description (1, 3 or 5)*|*Score*|
-    |Delivery Requirements|How critical is the delivery timeline for this Epic|4|
-    |Cost Saving|What is the potential cost saving associated with this Epic|3|
-    |Dependencies|How many dependencies does this Epic have|2|
-    |Technical Details|How complex are the technical details and implementation|1|
-    
-     Total:10`
-  }
-}
-
-describe('jira-to-github-processing for CNP - Initiative', t => {
-  it('Initiative: extracts summary from Jira issue ', t => {
+describe('jira-to-github-processing for CNP', t => {
+  it('Extracts summary from Jira issue ', t => {
 
     const result = extractSummary(cnp_issue.fields.description)
 
     assert.equal(result, 'Hourly Job to provide a CSV file in a storage account that has a count of all Virtual machines and VM scalesets that are running for the CJS Common Platform tenant by SKU type, Resource name, resource group name and Subscription name.')
   })
 
-  it('Initiative: extracts intended outcome from Jira issue', t => {
+  it('Extracts intended outcome from Jira issue', t => {
 
     const result = extractIntendedOutcome(cnp_issue.fields.description)
 
     assert.equal(result, `*Use data in CSV file format to review and understand how many SKu's are running every hours and especially at night so an average can be used to purchase the desired RI's for CFT.*\n    \n    *This should cover both virtual machines and scale sets.*\n    \n    *Every hour should have a new CSV file*`)
   })
 
-  it('Initiative: converts jira description to github markdown', t => {
+  it('Converts jira description to github markdown', t => {
     const result = jiraToGitHub({
         issueId: cnp_issue.key,
         issueType:  cnp_issue.fields.issuetype.name,
@@ -174,57 +122,15 @@ Hourly Job to provide a CSV file in a storage account that has a count of all Vi
 *No impact*`)
   })
 
-  it('Initiative: extracts score from Jira issue', t => {
+  it('Extracts score from Jira issue', t => {
     const score = extractPrioritisationTotalScore(cnp_issue.fields.description)
 
     assert.equal(score, 117, 'Prioritisation score in not accurate')
   })
 
-  it('Initiative: adds the correct labels to the issue - Initiative', t => {
+  it('Adds the correct labels to the issue', t => {
     const result = addAreaLabels(cnp_issue)
-    assert.deepStrictEqual(result, ["CNP", "Initiative"])
+    assert.deepStrictEqual(result, ["CNP"])
   })
 
-})
-
-describe('jira-to-github-processing for CNP - Epic', t => {
-  it('Epic: extracts summary from Jira issue', t => {
-
-    const result = extractSummary(epic_issue.fields.description)
-
-    assert.equal(result, 'Summary of the requirement here.')
-  })
-
-  it('Epic: converts jira description to github markdown', t => {
-    const result = jiraToGitHub({
-      issueId: epic_issue.key,
-      issueType: epic_issue.fields.issuetype.name,
-      content: epic_issue.fields.description
-    })
-
-    assert.equal(result, `DTSPO-22548
-
-## Summary
-
-Summary of the requirement here.
-
-## Delivery Requirements
-
-Delivery Requirements content here
-
-## Impact on Teams
-
-*No impact*`)
-  })
-
-  it('Epic: extracts score from Jira issue', t => {
-    const score = extractPrioritisationTotalScore(epic_issue.fields.description)
-
-    assert.equal(score, 10, 'Prioritisation score in not accurate')
-  })
-
-  it('Epic: adds the correct labels to the issue - Epic', t => {
-    const result = addAreaLabels(epic_issue)
-    assert.deepStrictEqual(result, ["CNP", "Epic"])
-  })
 })

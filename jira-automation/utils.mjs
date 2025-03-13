@@ -1,16 +1,6 @@
-export const INITIATIVE = 'Initiative';
-export const EPIC = 'Epic';
 
 export function isCnpIssue(issueId) {
     return issueId.startsWith('DTSPO')
-}
-
-export function isInitiative(issue) {
-    return issue.fields.issuetype.name === INITIATIVE;
-}
-
-export function isEpic(issue) {
-    return issue.fields.issuetype.name === EPIC;
 }
 
 export function addAreaLabels(issue) {
@@ -23,12 +13,6 @@ export function addAreaLabels(issue) {
         labels.push('common-platform');
     }
 
-    // Add Initiative or Epic label
-    if (isInitiative(issue)) {
-        labels.push(INITIATIVE);
-    } else if (isEpic(issue)) {
-        labels.push(EPIC);
-    }
     return labels;
 }
 
