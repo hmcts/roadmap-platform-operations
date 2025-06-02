@@ -36,7 +36,7 @@ steps:
       runAsPreJob: false
       ConnectedServiceName: "DTS-CFTPTL-INTSVC"
       keyVaultName: "cftptl-intsvc"
-      secretsFilter: "github-management-api-token,jira-api-token"
+      secretsFilter: "github-roadmap-token,jira-api-token"
   - task: NodeTool@0
     inputs:
       versionSpec: '20.x'
