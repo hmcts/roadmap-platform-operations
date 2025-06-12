@@ -8,7 +8,7 @@ jobs:
   move-to-done:
     runs-on: ubuntu-latest
     env:
-      GITHUB_TOKEN: ${{ secrets.SECRET_PAT }}
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN }} # ${{ secrets.SECRET_PAT }}
       PROJECT_OWNER: hmcts
       PROJECT_NUMBER: 10
       ISSUE_NUMBER: ${{ github.event.issue.number }}
