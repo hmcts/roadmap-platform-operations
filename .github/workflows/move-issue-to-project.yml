@@ -4,11 +4,15 @@ on:
   issues:
     types: [opened]
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   add-to-project:
     runs-on: ubuntu-latest
     env:
-      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN }} # ${{ secrets.SECRET_PAT }}
+      GITHUB_TOKEN: ${{ secrets.SECRET_PAT }}
       PROJECT_OWNER: hmcts
       PROJECT_NUMBER: 10
       ISSUE_URL: ${{ github.event.issue.html_url }}
