@@ -15,13 +15,12 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.PRIVATE_KEY }}
           owner: hmcts
-      - name: Add issue to project 📋 Backlog column
+      - name: Move issue to 🏗 In progress
         env:
           GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
           PROJECT_OWNER: hmcts
           PROJECT_NUMBER: 10
           ISSUE_URL: ${{ github.event.issue.html_url }}
-      - name: Move issue to 🏗 In progress
         run: |
           # Get project ID
           PROJECT_ID=$(gh project view $PROJECT_NUMBER --owner $PROJECT_OWNER --format json | jq -r '.id')

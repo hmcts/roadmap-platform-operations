@@ -25,7 +25,6 @@ jobs:
           PROJECT_OWNER: hmcts
           PROJECT_NUMBER: 10
           ISSUE_URL: ${{ github.event.issue.html_url }}
-      - name: Add issue to project 📋 Backlog column
         run: |
           # Get project ID
           PROJECT_ID=$(gh project view $PROJECT_NUMBER --owner $PROJECT_OWNER --format json | jq -r '.id')
