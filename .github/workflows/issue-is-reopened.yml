@@ -7,12 +7,20 @@ on:
 jobs:
   move-to-in-progress:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN }} # ${{ secrets.SECRET_PAT }}
-      PROJECT_OWNER: hmcts
-      PROJECT_NUMBER: 10
-      ISSUE_NUMBER: ${{ github.event.issue.number }}
     steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+          owner: hmcts
+      - name: Add issue to project 📋 Backlog column
+        env:
+          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+          PROJECT_OWNER: hmcts
+          PROJECT_NUMBER: 10
+          ISSUE_URL: ${{ github.event.issue.html_url }}
       - name: Move issue to 🏗 In progress
         run: |
           # Get project ID
