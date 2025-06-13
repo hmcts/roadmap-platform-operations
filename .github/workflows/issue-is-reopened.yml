@@ -21,6 +21,7 @@ jobs:
           PROJECT_OWNER: hmcts
           PROJECT_NUMBER: 10
           ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           # Get project ID
           PROJECT_ID=$(gh project view $PROJECT_NUMBER --owner $PROJECT_OWNER --format json | jq -r '.id')
@@ -42,6 +43,12 @@ jobs:
           ITEM_ID=""
           echo "Fetching items..."
           ITEMS_RESPONSE=$(gh project item-list $PROJECT_NUMBER --owner $PROJECT_OWNER --format json --limit 10000)
+
+          # Check if the response is empty
+          if [ -z "$ITEMS_RESPONSE" ]; then
+            echo "Error: Empty response from gh project item-list"
+            exit 1
+          fi
 
           # Extract the item ID if the issue is found
           ITEM_ID=$(echo "$ITEMS_RESPONSE" | jq -r --arg ISSUE_NUMBER "$ISSUE_NUMBER" '.items[] | select(.content.number == ($ISSUE_NUMBER | tonumber)) | .id')
