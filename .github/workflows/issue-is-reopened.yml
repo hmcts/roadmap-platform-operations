@@ -4,10 +4,21 @@ on:
   issues:
     types: [reopened]
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  repository-projects: write
+
 jobs:
   move-to-in-progress:
     runs-on: ubuntu-latest
     steps:
+      - name: Install GitHub CLI and jq
+        run: |
+          sudo apt update
+          sudo apt install -y gh jq
+
       - name: Generate token
         id: generate_token
         uses: actions/create-github-app-token@v1
@@ -15,49 +26,45 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.PRIVATE_KEY }}
           owner: hmcts
+
+      - name: Authenticate GitHub CLI
+        run: echo "${{ steps.generate_token.outputs.token }}" | gh auth login --with-token
+
       - name: Move issue to 🏗 In progress
         env:
-          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
           PROJECT_OWNER: hmcts
           PROJECT_NUMBER: 10
           ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          # Get project ID
-          PROJECT_ID=$(gh project view $PROJECT_NUMBER --owner $PROJECT_OWNER --format json | jq -r '.id')
-          echo "Project ID: $PROJECT_ID"
+          echo "Getting project ID..."
+          PROJECT_ID=$(gh project view "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json | jq -r '.id')
+          echo "PROJECT_ID: $PROJECT_ID"
 
-          # Get all fields
-          FIELDS=$(gh project field-list $PROJECT_NUMBER --owner $PROJECT_OWNER --format json)
-          echo "All fields:"
-          echo "$FIELDS" | jq '.'
-
-          STATUS_FIELD=$(echo "$FIELDS" | jq -r '.fields[] | select(.name == "Status")')
+          echo "Fetching project fields..."
+          FIELDS=$(gh project field-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json)
+          STATUS_FIELD=$(echo "$FIELDS" | jq -r '.[] | select(.name == "Status")')
           STATUS_FIELD_ID=$(echo "$STATUS_FIELD" | jq -r '.id')
           INPROGRESS_OPTION_ID=$(echo "$STATUS_FIELD" | jq -r '.options[] | select(.name == "🏗 In progress") | .id')
-          
+
           echo "STATUS_FIELD_ID: $STATUS_FIELD_ID"
           echo "INPROGRESS_OPTION_ID: $INPROGRESS_OPTION_ID"
 
-          # Find the item ID for the closed issue
-          ITEM_ID=""
-          echo "Fetching items..."
-          ITEMS_RESPONSE=$(gh project item-list $PROJECT_NUMBER --owner $PROJECT_OWNER --format json --limit 10000)
+          echo "Fetching project items..."
+          ITEMS=$(gh project item-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json --limit 100)
 
-          # Extract the item ID if the issue is found
-          ITEM_ID=$(echo "$ITEMS_RESPONSE" | jq -r --arg ISSUE_NUMBER "$ISSUE_NUMBER" '.items[] | select(.content.number == ($ISSUE_NUMBER | tonumber)) | .id')
+          ITEM_ID=$(echo "$ITEMS" | jq -r --arg ISSUE_NUMBER "$ISSUE_NUMBER" '.[] | select(.content.number == ($ISSUE_NUMBER | tonumber)) | .id')
 
           if [ -n "$ITEM_ID" ]; then
-            echo "Item found with ID: $ITEM_ID"
+            echo "Found item ID: $ITEM_ID"
           else
-            echo "Error: Could not find the issue in the project. Skipping status update."
+            echo "Issue not found in project. Skipping."
             exit 0
           fi
 
-          echo "ITEM_ID: $ITEM_ID"
-
-          # Set the Status to 🏗 In progress
-          echo "Updating item status to 🏗 In progress..."
-          RESULT=$(gh project item-edit $PROJECT_NUMBER \
+          echo "Updating issue status to 🏗 In progress..."
+          RESULT=$(gh project item-edit "$PROJECT_NUMBER" \
             --id "$ITEM_ID" \
             --project-id "$PROJECT_ID" \
             --field-id "$STATUS_FIELD_ID" \
@@ -65,8 +72,8 @@ jobs:
             --format json)
 
           if echo "$RESULT" | jq -e '.id' > /dev/null; then
-            echo "Issue successfully moved to 🏗 In progress status."
+            echo "✅ Issue successfully updated to 🏗 In progress."
           else
-            echo "Error updating issue status: $RESULT"
+            echo "❌ Error updating issue status."
             exit 1
           fi
