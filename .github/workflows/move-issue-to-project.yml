@@ -5,15 +5,13 @@ on:
     types: [opened]
 
 permissions:
-  contents: read
   issues: write
-  pull-requests: write
-  repository-projects: write  # Needed for classic projects
-  actions: read
+  repository-projects: write
 
 jobs:
   add-to-project:
     runs-on: ubuntu-latest
+
     steps:
       - name: Install GitHub CLI and jq
         run: |
@@ -31,28 +29,28 @@ jobs:
       - name: Authenticate GitHub CLI
         run: echo "${{ steps.generate_token.outputs.token }}" | gh auth login --with-token
 
-      - name: Add issue to project 📋 Backlog column
+      - name: Add issue to 📋 Backlog column
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
           PROJECT_OWNER: hmcts
           PROJECT_NUMBER: 10
           ISSUE_URL: ${{ github.event.issue.html_url }}
         run: |
-          echo "Getting project ID..."
+          echo "🔍 Getting project ID..."
           PROJECT_ID=$(gh project view "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json | jq -r '.id')
           echo "PROJECT_ID: $PROJECT_ID"
 
-          echo "Adding issue to project..."
+          echo "➕ Adding issue to project..."
           ITEM_JSON=$(gh project item-add "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --url "$ISSUE_URL" --format json)
           ITEM_ID=$(echo "$ITEM_JSON" | jq -r '.id')
           echo "ITEM_ID: $ITEM_ID"
 
           if [ -z "$ITEM_ID" ]; then
-            echo "Error: Failed to add issue to project."
+            echo "❌ Error: Failed to add issue to project."
             exit 1
           fi
 
-          echo "Fetching project fields..."
+          echo "🔍 Fetching project fields..."
           FIELDS=$(gh project field-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json)
           STATUS_FIELD=$(echo "$FIELDS" | jq -r '.[] | select(.name == "Status")')
           STATUS_FIELD_ID=$(echo "$STATUS_FIELD" | jq -r '.id')
@@ -62,11 +60,11 @@ jobs:
           echo "BACKLOG_OPTION_ID: $BACKLOG_OPTION_ID"
 
           if [ -z "$STATUS_FIELD_ID" ] || [ -z "$BACKLOG_OPTION_ID" ]; then
-            echo "Error: Could not find Status field or 📋 Backlog option."
+            echo "❌ Error: Missing field or status option."
             exit 1
           fi
 
-          echo "Setting issue status to 📋 Backlog..."
+          echo "📋 Setting issue status to Backlog..."
           RESULT=$(gh project item-edit "$PROJECT_NUMBER" \
             --id "$ITEM_ID" \
             --project-id "$PROJECT_ID" \
@@ -74,11 +72,9 @@ jobs:
             --single-select-option-id "$BACKLOG_OPTION_ID" \
             --format json)
 
-          echo "RESULT: $RESULT"
-
           if echo "$RESULT" | jq -e '.id' > /dev/null; then
-            echo "✅ Issue successfully added to project and set to 📋 Backlog status."
+            echo "✅ Issue successfully set to 📋 Backlog."
           else
-            echo "❌ Error updating issue status."
+            echo "❌ Failed to update issue status."
             exit 1
           fi
