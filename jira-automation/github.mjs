@@ -204,7 +204,7 @@ async function getItemId({projectId, issueKey, cursor}) {
 export async function findIssueNumberFromJiraKey({issueKey}) {
     const result = await graphqlWithAuth(
         `query {
-           search(query: "repo:hmcts/roadmap-platform-operations in:body ${issueKey}", type: ISSUE, first: 2) {
+           search(query: "repo:hmcts/roadmap-platform-operations in:body ${issueKey}", type: ISSUE, first: 10) {
              nodes {
                ... on Issue {
                 id,
