@@ -1,4 +1,4 @@
-# roadmap-platform-operationst
+# roadmap-platform-operationsts
 
 A forward view of what the Platform Operation team plans to work on.
 
