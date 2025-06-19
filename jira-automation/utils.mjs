@@ -44,9 +44,7 @@ export function getSingleItem(arry) {
     return arry.at(arry.length - 1)
 }
 
-export async function getGitHubAuthToken(appId, keyValue) {
-    const privateKey = formatPem(keyValue);
-    console.log(privateKey);
+export async function getGitHubAuthToken(appId, privateKey) {
     const auth = createAppAuth({appId, privateKey});
     const appAuthentication = await auth({type: "app"});
 
@@ -63,24 +61,4 @@ export async function getGitHubAuthToken(appId, keyValue) {
 
     const installationAuth = await auth({type: "installation", installationId});
     return installationAuth.token;
-}
-
-function formatPem(oneLinePem) {
-    const pem = oneLinePem.trim();
-    const headerMatch = pem.match(/(-----BEGIN [^-]+-----)/);
-    const footerMatch = pem.match(/(-----END [^-]+-----)/);
-
-    if (!headerMatch || !footerMatch) {
-        throw new Error('Invalid PEM format: missing header or footer');
-    }
-
-    const header = headerMatch[1];
-    const footer = footerMatch[1];
-
-    let body = pem.replace(header, '').replace(footer, '');
-    body = body.replace(/^ +/, '').replace(/ +$/, '');
-    body = body.replace(/( |)\n*$/, '');
-    let pemString = `${header}\n${body}\n${footer}`;
-    pemString = pemString.replace(/\n+(-----END [^-]+-----)/, '\n$1');
-    return pemString;
 }

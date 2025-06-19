@@ -1,6 +1,5 @@
 import {graphql} from "@octokit/graphql";
 import {getSingleItem, getGitHubAuthToken} from "./utils.mjs";
-import fs from "fs";
 
 const appId = process.env.GITHUB_APP_ID;
 const privateKey = process.env.GITHUB_APP_PRIVATE_KEY;
