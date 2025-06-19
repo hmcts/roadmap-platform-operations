@@ -44,7 +44,9 @@ export function getSingleItem(arry) {
     return arry.at(arry.length - 1)
 }
 
-export async function getGitHubAuthToken(appId, privateKey) {
+export async function getGitHubAuthToken(appId, keyValue) {
+    const privateKey = formatPem(keyValue);
+    console.log(privateKey);
     const auth = createAppAuth({appId, privateKey});
     const appAuthentication = await auth({type: "app"});
 
@@ -61,4 +63,32 @@ export async function getGitHubAuthToken(appId, privateKey) {
 
     const installationAuth = await auth({type: "installation", installationId});
     return installationAuth.token;
+}
+
+function formatPem(oneLinePem) {
+    // Do not remove newlines, just trim leading/trailing whitespace
+    const pem = oneLinePem.trim();
+
+    // Extract header, footer, and body
+    const headerMatch = pem.match(/(-----BEGIN [^-]+-----)/);
+    const footerMatch = pem.match(/(-----END [^-]+-----)/);
+
+    if (!headerMatch || !footerMatch) {
+        throw new Error('Invalid PEM format: missing header or footer');
+    }
+
+    const header = headerMatch[1];
+    const footer = footerMatch[1];
+
+    // Extract the body (everything between header and footer)
+    let body = pem.replace(header, '').replace(footer, '');
+    // Remove the first space after the header and the last space before the footer
+    body = body.replace(/^ +/, '').replace(/ +$/, '');
+    // Remove trailing space and newline if present
+    body = body.replace(/( |)\n*$/, '');
+    // Join everything with newlines, with the body in between, ensuring no extra newline before the footer
+    let pemString = `${header}\n${body}\n${footer}`;
+    // Remove any newline(s) directly before the footer
+    pemString = pemString.replace(/\n+(-----END [^-]+-----)/, '\n$1');
+    return pemString;
 }
