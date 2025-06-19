@@ -36,7 +36,7 @@ steps:
       runAsPreJob: false
       ConnectedServiceName: "DTS-CFTPTL-INTSVC"
       keyVaultName: "cftptl-intsvc"
-      secretsFilter: "github-management-api-token,jira-api-token"
+      secretsFilter: "github-management-api-token,jira-api-token,github-roadmap-private-key,github-roadmap-app-id"
   - task: NodeTool@0
     inputs:
       versionSpec: '20.x'
@@ -50,6 +50,9 @@ steps:
     env:
       GITHUB_TOKEN: $(github-management-api-token)
       JIRA_API_TOKEN: $(jira-api-token)
+      GITHUB_APP_ID: $(github-roadmap-app-id)
+      GITHUB_APP_PRIVATE_KEY: |
+        $(github-roadmap-private-key)
     inputs:
       targetType: inline
       script: node jira-automation/index.mjs

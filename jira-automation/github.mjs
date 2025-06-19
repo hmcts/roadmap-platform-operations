@@ -1,14 +1,15 @@
 import {graphql} from "@octokit/graphql";
-import {getSingleItem} from "./utils.mjs";
+import {getSingleItem, getGitHubAuthToken} from "./utils.mjs";
 
-const token = process.env.GITHUB_TOKEN || process.env.GITHUB_REPO_TOKEN;
+const appId = process.env.GITHUB_APP_ID;
+const privateKey = process.env.GITHUB_APP_PRIVATE_KEY;
+const token = await getGitHubAuthToken(appId, privateKey);
 
 const graphqlWithAuth = graphql.defaults({
     headers: {
         authorization: `token ${token}`,
     },
 });
-
 
 export async function createGitHubIssue(repositoryId, issue, labels, labelsToAdd) {
     const labelIds = labelsToAdd
