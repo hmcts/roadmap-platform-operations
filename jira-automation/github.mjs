@@ -1,14 +1,16 @@
 import {graphql} from "@octokit/graphql";
-import {getSingleItem} from "./utils.mjs";
+import {getSingleItem, getGitHubAuthToken} from "./utils.mjs";
+import fs from "fs";
 
-const token = process.env.GITHUB_TOKEN || process.env.GITHUB_REPO_TOKEN;
+const appId = process.env.GITHUB_APP_ID;
+const privateKey = process.env.GITHUB_APP_PRIVATE_KEY;
+const token = await getGitHubAuthToken(appId, privateKey);
 
 const graphqlWithAuth = graphql.defaults({
     headers: {
         authorization: `token ${token}`,
     },
 });
-
 
 export async function createGitHubIssue(repositoryId, issue, labels, labelsToAdd) {
     const labelIds = labelsToAdd
@@ -216,6 +218,7 @@ export async function findIssueNumberFromJiraKey({issueKey}) {
         }`,
     );
 
+    console.log(result)
     if (result.search.nodes.length === 0) {
         throw new Error("Couldn't find matching issue: " + issueKey)
     }
