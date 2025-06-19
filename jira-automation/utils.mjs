@@ -66,10 +66,7 @@ export async function getGitHubAuthToken(appId, keyValue) {
 }
 
 function formatPem(oneLinePem) {
-    // Do not remove newlines, just trim leading/trailing whitespace
     const pem = oneLinePem.trim();
-
-    // Extract header, footer, and body
     const headerMatch = pem.match(/(-----BEGIN [^-]+-----)/);
     const footerMatch = pem.match(/(-----END [^-]+-----)/);
 
@@ -80,15 +77,10 @@ function formatPem(oneLinePem) {
     const header = headerMatch[1];
     const footer = footerMatch[1];
 
-    // Extract the body (everything between header and footer)
     let body = pem.replace(header, '').replace(footer, '');
-    // Remove the first space after the header and the last space before the footer
     body = body.replace(/^ +/, '').replace(/ +$/, '');
-    // Remove trailing space and newline if present
     body = body.replace(/( |)\n*$/, '');
-    // Join everything with newlines, with the body in between, ensuring no extra newline before the footer
     let pemString = `${header}\n${body}\n${footer}`;
-    // Remove any newline(s) directly before the footer
     pemString = pemString.replace(/\n+(-----END [^-]+-----)/, '\n$1');
     return pemString;
 }
