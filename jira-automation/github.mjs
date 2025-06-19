@@ -218,7 +218,6 @@ export async function findIssueNumberFromJiraKey({issueKey}) {
         }`,
     );
 
-    console.log(result)
     if (result.search.nodes.length === 0) {
         throw new Error("Couldn't find matching issue: " + issueKey)
     }
