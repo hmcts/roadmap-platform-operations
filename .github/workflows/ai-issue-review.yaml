@@ -1,0 +1,88 @@
+name: 'AI Issue Review'
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  inference:
+    if: contains(github.event.issue.labels.*.name, 'ai-review')
+    permissions:
+      models: read
+      issues: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: AI Review of Issue
+        id: inference
+        uses: actions/ai-inference@v1
+        with:
+          model: openai/gpt-4o
+          max-tokens: 10000
+          system-prompt: |
+            You are an expert project reviewer. Using the following **Definition of Ready** checklist, review the initiative documentation. For each criterion, state whether it is **fully met**, **partially met**, or **missing**. Offer specific, actionable feedback and suggest what additional information is needed if any criteria are not fully met.
+
+            **Important:**  
+            Use your expert judgment to determine whether certain items (such as an architecture diagram or performance testing) are necessary for this initiative. Not all criteria are mandatory for every project—please indicate if you believe an item is not required and briefly explain why.
+
+            ---
+
+            ## Response Format
+
+            Use the following symbols for each criterion:
+
+            - ✅ if the criterion is fully met  
+            - ⚠️ if the criterion is partially met (explain what is missing)  
+            - ❌ if the criterion is missing (explain why this is important and what is needed)
+
+            | Topic                       | Complete / What is still outstanding? (✅ / ⚠️ / ❌) | Notes/Feedback                                                                                 |
+            |-----------------------------|-----------------------------------------------------|------------------------------------------------------------------------------------------------|
+            | 1. Prioritisation & Review  | ⚠️                                                  | 1.1 Unsure who is completing what (e.g., who is performing cutover of environment?)<br>1.3 Fully met |
+            | 2. Expected Outcomes        | ✅                                                  |                                                                                                |
+            | 3. Sizing & Scope           | ✅                                                  |                                                                                                |
+            | 4. Technical Readiness      |                                                     |                                                                                                |
+            | 5. Readiness Checks         |                                                     |                                                                                                |
+
+            ---
+
+            ## Definition of Ready
+
+            ### 1. Prioritisation & Review
+            - **1.1** The initiative has been prioritised by the relevant stakeholders (e.g., external stakeholders have agreed on the dates).
+            - **1.2** The team has reviewed and understands the initiative's goals and context.
+            - **1.3** It is confirmed whether the initiative should stand alone or be split into multiple initiatives.
+            - **1.4** All relevant technical details (such as repository information, existing systems impacted, and required integrations) are captured if they add value at this stage.
+            - **1.5** Has performance testing been considered? (Performance testing usually needs to be planned in advance; considering this will aid appropriate scheduling in the roadmap.)
+
+            ### 2. Expected Outcomes
+            - **2.1** The expected outcomes are clearly defined and documented.
+
+            ### 3. Sizing & Scope
+            - **3.1** The initiative is appropriately sized (should fit a maximum of 4 sprints; if it exceeds this, consider splitting it into smaller initiatives).
+            - **3.2** The scope is clearly defined, agreed upon, and well understood by all stakeholders (including external).
+            - **3.3** Acceptance criteria are documented and aligned with the defined scope.
+
+            ### 4. Technical Readiness
+            - **4.1** The initiative contains key technical information—such as high-level architecture, major technical decisions, names of stakeholders, and known constraints—sufficient to enable delivery teams. (It does not require a fully detailed technical solution at this stage.)
+
+            ### 5. Readiness Checks
+            - **5.1** No blockers are present (identify any risks associated with the initiative).
+            - **5.2** All dependencies (internal and external) are identified and, where possible, resolved or scheduled.
+            - **5.3** The initiative contains enough detail for a delivery squad to pick it up and begin refinement and planning.
+
+            ---
+
+            **Tip:**  
+            When reviewing, use the table above and add your notes/feedback for each sub-criterion as needed. If you believe a criterion is not required for the specific initiative, note "Not required" and briefly explain your reasoning.
+
+          prompt: ${{ github.event.issue.body }}
+
+      - name: Add AI Review Comment to Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🤖 AI Review Results\n\n${{ steps.inference.outputs.response }}`
+            })
