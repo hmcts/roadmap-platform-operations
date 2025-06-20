@@ -1,0 +1,125 @@
+name: 'AI Issue Update Review'
+on:
+  issues:
+    types: [edited]
+
+jobs:
+  update-review:
+    if: contains(github.event.issue.labels.*.name, 'ai-review')
+    permissions:
+      models: read
+      issues: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if AI Review exists
+        id: find-review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comments = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            // Find the latest AI Review comment
+            const aiReviewComments = comments.data.filter(comment =>
+              comment.body.includes('🤖 AI Review Results')
+            );
+            const aiReviewComment = aiReviewComments.length > 0 ? aiReviewComments[aiReviewComments.length - 1] : null;
+
+            if (aiReviewComment) {
+              core.setOutput('review-exists', 'true');
+              core.setOutput('previous-review', aiReviewComment.body);
+              core.setOutput('comment-id', aiReviewComment.id);
+            } else {
+              core.setOutput('review-exists', 'false');
+            }
+
+      - name: AI Review of Updated Issue
+        if: steps.find-review.outputs.review-exists == 'true'
+        id: inference
+        uses: actions/ai-inference@v1
+        with:
+          model: openai/gpt-4o
+          max-tokens: 10000
+          system-prompt: |
+            You are an expert project reviewer performing a follow-up review. An issue has been updated after receiving initial AI feedback. Your task is to:
+
+            1. Compare the updated issue content against the previous AI review feedback
+            2. Identify what changes were made in response to the feedback
+            3. Re-evaluate the initiative against the Definition of Ready checklist
+            4. Highlight improvements made and any remaining gaps
+
+            **Response Format:**
+
+            ## 📊 Update Review Summary
+
+            ### Changes Made
+            - List specific changes made since the previous review
+
+            ### Updated Assessment
+            Use the same table format as before with updated status:
+
+            | Topic                       | Previous Status | Current Status (✅ / ⚠️ / ❌) | Notes/Feedback |
+            |-----------------------------|-----------------|------------------------------|----------------|
+            | 1. Prioritisation & Review  |                 |                              |                |
+            | 2. Expected Outcomes        |                 |                              |                |
+            | 3. Sizing & Scope           |                 |                              |                |
+            | 4. Technical Readiness      |                 |                              |                |
+            | 5. Readiness Checks         |                 |                              |                |
+
+            ### Overall Progress
+            - Mention overall improvement and readiness level
+            - Highlight any outstanding items that still need attention
+
+            ---
+
+            ## Definition of Ready (Same as before)
+
+            ### 1. Prioritisation & Review
+            - **1.1** The initiative has been prioritised by the relevant stakeholders (e.g., external stakeholders have agreed on the dates).
+            - **1.2** The team has reviewed and understands the initiative's goals and context.
+            - **1.3** It is confirmed whether the initiative should stand alone or be split into multiple initiatives.
+            - **1.4** All relevant technical details (such as repository information, existing systems impacted, and required integrations) are captured if they add value at this stage.
+            - **1.5** Has performance testing been considered? (Performance testing usually needs to be planned in advance; considering this will aid appropriate scheduling in the roadmap.)
+
+            ### 2. Expected Outcomes
+            - **2.1** The expected outcomes are clearly defined and documented.
+
+            ### 3. Sizing & Scope
+            - **3.1** The initiative is appropriately sized (should fit a maximum of 4 sprints; if it exceeds this, consider splitting it into smaller initiatives).
+            - **3.2** The scope is clearly defined, agreed upon, and well understood by all stakeholders (including external).
+            - **3.3** Acceptance criteria are documented and aligned with the defined scope.
+
+            ### 4. Technical Readiness
+            - **4.1** The initiative contains key technical information—such as high-level architecture, major technical decisions, names of stakeholders, and known constraints—sufficient to enable delivery teams. (It does not require a fully detailed technical solution at this stage.)
+
+            ### 5. Readiness Checks
+            - **5.1** No blockers are present (identify any risks associated with the initiative).
+            - **5.2** All dependencies (internal and external) are identified and, where possible, resolved or scheduled.
+            - **5.3** The initiative contains enough detail for a delivery squad to pick it up and begin refinement and planning.
+
+          prompt: |
+            **Updated Issue Content:**
+            ${{ github.event.issue.body }}
+
+            **Previous AI Review:**
+            ${{ steps.find-review.outputs.previous-review }}
+
+      - name: Add Updated Review Comment to Issue
+        if: steps.find-review.outputs.review-exists == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🔄 AI Update Review Results\n\n${{ steps.inference.outputs.response }}`
+            })
+
+      - name: Skip if no previous review
+        if: steps.find-review.outputs.review-exists == 'false'
+        run: echo "No previous AI review found. Skipping update review."
