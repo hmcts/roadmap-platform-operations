@@ -4,9 +4,11 @@ import { Octokit } from "@octokit/rest";
 import {jiraToGitHub} from "../jira-to-github-processing.mjs"
 import { getIssue } from "../jira.mjs";
 import { updateGitHubIssue } from "../github.mjs";
+import {getGitHubAuthToken} from "../utils.mjs";
 
-const token = process.env.GITHUB_TOKEN || process.env.GITHUB_REPO_TOKEN;
-
+const appId = process.env.GITHUB_APP_ID;
+const privateKey = process.env.GITHUB_APP_PRIVATE_KEY;
+const token = await getGitHubAuthToken(appId, privateKey);
 
 // Create an Octokit instance with your GitHub personal access token
 const octokit = new Octokit({
