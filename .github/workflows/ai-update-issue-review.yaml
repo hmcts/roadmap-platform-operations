@@ -1,4 +1,4 @@
-name: 'AI Issue Update Review'
+name: 'AI Issue Update Review (Azure)'
 on:
   issues:
     types: [edited]
@@ -7,7 +7,6 @@ jobs:
   update-review:
     if: contains(github.event.issue.labels.*.name, 'ai-review')
     permissions:
-      models: read
       issues: write
       contents: read
     runs-on: ubuntu-latest
@@ -40,73 +39,151 @@ jobs:
       - name: AI Review of Updated Issue
         if: steps.find-review.outputs.review-exists == 'true'
         id: inference
-        uses: actions/ai-inference@v1
-        with:
-          model: openai/gpt-4o
-          max-tokens: 10000
-          system-prompt: |
-            You are an expert project reviewer performing a follow-up review. An issue has been updated after receiving initial AI feedback. Your task is to:
+        env:
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+        run: |
+          # Install required packages
+          pip install requests
 
-            1. Compare the updated issue content against the previous AI review feedback
-            2. Identify what changes were made in response to the feedback
-            3. Re-evaluate the initiative against the Definition of Ready checklist
-            4. Highlight improvements made and any remaining gaps
+          # Create Python script for API call
+          cat > azure_openai_update_review.py << 'EOF'
+          import os
+          import json
+          import requests
+          import sys
 
-            **Response Format:**
+          # Get the issue body and previous review from arguments
+          issue_body = sys.argv[1]
+          previous_review = sys.argv[2]
 
-            ## 📊 Update Review Summary
+          # System prompt
+          system_prompt = """
+          You are an expert project reviewer performing a follow-up review. An issue has been updated after receiving initial AI feedback. Your task is to:
 
-            ### Changes Made
-            - List specific changes made since the previous review
+          1. Compare the updated issue content against the previous AI review feedback
+          2. Identify what changes were made in response to the feedback
+          3. Re-evaluate the initiative against the Definition of Ready checklist
+          4. Highlight improvements made and any remaining gaps
 
-            ### Updated Assessment
-            Use the same table format as before with updated status:
+          **Response Format:**
 
-            | Topic                       | Previous Status | Current Status (✅ / ⚠️ / ❌) | Notes/Feedback |
-            |-----------------------------|-----------------|------------------------------|----------------|
-            | 1. Prioritisation & Review  |                 |                              |                |
-            | 2. Expected Outcomes        |                 |                              |                |
-            | 3. Sizing & Scope           |                 |                              |                |
-            | 4. Technical Readiness      |                 |                              |                |
-            | 5. Readiness Checks         |                 |                              |                |
+          ## 📊 Update Review Summary
 
-            ### Overall Progress
-            - Mention overall improvement and readiness level
-            - Highlight any outstanding items that still need attention
+          ### Changes Made
+          - List specific changes made since the previous review
 
-            ---
+          ### Updated Assessment
+          Use the same table format as before with updated status:
 
-            ## Definition of Ready (Same as before)
+          | Topic                       | Previous Status | Current Status (✅ / ⚠️ / ❌) | Notes/Feedback |
+          |-----------------------------|-----------------|------------------------------|----------------|
+          | 1. Prioritisation & Review  |                 |                              |                |
+          | 2. Expected Outcomes        |                 |                              |                |
+          | 3. Sizing & Scope           |                 |                              |                |
+          | 4. Technical Readiness      |                 |                              |                |
+          | 5. Readiness Checks         |                 |                              |                |
 
-            ### 1. Prioritisation & Review
-            - **1.1** The initiative has been prioritised by the relevant stakeholders (e.g., external stakeholders have agreed on the dates).
-            - **1.2** The team has reviewed and understands the initiative's goals and context.
-            - **1.3** It is confirmed whether the initiative should stand alone or be split into multiple initiatives.
-            - **1.4** All relevant technical details (such as repository information, existing systems impacted, and required integrations) are captured if they add value at this stage.
-            - **1.5** Has performance testing been considered? (Performance testing usually needs to be planned in advance; considering this will aid appropriate scheduling in the roadmap.)
+          ### Overall Progress
+          - Mention overall improvement and readiness level
+          - Highlight any outstanding items that still need attention
 
-            ### 2. Expected Outcomes
-            - **2.1** The expected outcomes are clearly defined and documented.
+          ---
 
-            ### 3. Sizing & Scope
-            - **3.1** The initiative is appropriately sized (should fit a maximum of 4 sprints; if it exceeds this, consider splitting it into smaller initiatives).
-            - **3.2** The scope is clearly defined, agreed upon, and well understood by all stakeholders (including external).
-            - **3.3** Acceptance criteria are documented and aligned with the defined scope.
+          ## Definition of Ready
 
-            ### 4. Technical Readiness
-            - **4.1** The initiative contains key technical information—such as high-level architecture, major technical decisions, names of stakeholders, and known constraints—sufficient to enable delivery teams. (It does not require a fully detailed technical solution at this stage.)
+          ### 1. Problem Statement
+          - 1.1 The problem or opportunity is clearly articulated, providing context for why this initiative is needed.
+          
+          ### 2. Business Need & Benefit
+          - 2.1 The business need is defined, including the expected benefits or value to be delivered by this initiative.
+          
+          ### 3. Requirements & Scope
+          - 3.1 Requirements are documented, with clear definitions of what is in scope and out of scope.
+          - 3.2 Acceptance criteria are outlined, ensuring a shared understanding of what success looks like.
+          
+          ### 4. Measurable Outcomes
+          - 4.1 The initiative has defined, measurable outcomes or success metrics.
+          
+          ### 5. Blockers, Risks & Issues
+          - 5.1 All known blockers, risks, and issues are identified and documented.
+          - 5.2 Mitigation strategies or contingency plans are outlined where possible.
+          
+          ### 6. Dependencies
+          - 6.1 All internal and external dependencies are identified.
+          - 6.2 Where possible, dependencies are resolved or have a clear plan for resolution.
+          
+          ### 7. High-Level Solution Design
+          - 7.1 A high-level solution design or approach is considered and documented.
+          - 7.2 Any major technical considerations or constraints are noted.
+          - 7.3 Relevant technical documentation (e.g., architecture diagrams, impacted systems) is referenced if available.
+          
+          ### 8. High-Level Timelines & Limitations
+          - 8.1 High-level timelines or target delivery windows are identified.
+          - 8.2 Any known scheduling limitations or constraints are documented.
+          
+          ### 9. Stakeholders
+          - 9.1 All relevant stakeholders are identified, including business owners, technical leads, and external partners if applicable.
+          - 9.2 Stakeholder roles and responsibilities are clear.
+          - 9.3 The initiative has been prioritised by the relevant stakeholders (e.g., external stakeholders have agreed on the dates).
+          
+          ### 10. Supporting Documentation
+          - 10.1 Any relevant Confluence pages or supporting documentation are linked or referenced.
+          - 10.2 All relevant technical details (such as repository information, existing systems impacted, and required integrations) are captured if they add value at this stage.
+          
+          """
 
-            ### 5. Readiness Checks
-            - **5.1** No blockers are present (identify any risks associated with the initiative).
-            - **5.2** All dependencies (internal and external) are identified and, where possible, resolved or scheduled.
-            - **5.3** The initiative contains enough detail for a delivery squad to pick it up and begin refinement and planning.
+          # Azure OpenAI API endpoint
+          endpoint = "https://ai-foundry-pocs.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview"
+          api_key = os.environ.get("AZURE_OPENAI_API_KEY")
 
-          prompt: |
-            **Updated Issue Content:**
-            ${{ github.event.issue.body }}
+          # Request headers
+          headers = {
+              "Content-Type": "application/json",
+              "api-key": api_key
+          }
 
-            **Previous AI Review:**
-            ${{ steps.find-review.outputs.previous-review }}
+          # Create user prompt with updated issue content and previous review
+          user_prompt = f"""
+          **Updated Issue Content:**
+          {issue_body}
+
+          **Previous AI Review:**
+          {previous_review}
+          """
+
+          # Request payload
+          payload = {
+              "messages": [
+                  {"role": "system", "content": system_prompt},
+                  {"role": "user", "content": user_prompt}
+              ],
+              "max_tokens": 10000
+          }
+
+          # Make the API call
+          response = requests.post(endpoint, headers=headers, json=payload)
+          
+          if response.status_code == 200:
+              result = response.json()
+              ai_response = result["choices"][0]["message"]["content"]
+              print(ai_response)
+              
+              # Save to file for GitHub Actions output
+              with open("ai_response.txt", "w") as f:
+                  f.write(ai_response)
+          else:
+              print(f"Error: {response.status_code}")
+              print(response.text)
+              exit(1)
+          EOF
+
+          # Run the Python script with the issue body and previous review
+          python azure_openai_update_review.py "${{ github.event.issue.body }}" "${{ steps.find-review.outputs.previous-review }}" > ai_response.txt
+          
+          # Set the output for use in the next step
+          echo "response<<EOF" >> $GITHUB_OUTPUT
+          cat ai_response.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Add Updated Review Comment to Issue
         if: steps.find-review.outputs.review-exists == 'true'
@@ -117,7 +194,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## 🔄 AI Update Review Results\n\n${{ steps.inference.outputs.response }}`
+              body: `## 🔄 AI Update Review Results (Azure)\n\n${{ steps.inference.outputs.response }}`
             })
 
       - name: Skip if no previous review
