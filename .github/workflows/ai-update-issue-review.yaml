@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Check if AI Review exists
         id: find-review
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const comments = await github.rest.issues.listComments({
@@ -187,7 +187,7 @@ jobs:
 
       - name: Add Updated Review Comment to Issue
         if: steps.find-review.outputs.review-exists == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             github.rest.issues.createComment({
