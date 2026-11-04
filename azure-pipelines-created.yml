@@ -16,7 +16,7 @@ steps:
     displayName: "Get GitHub API token from Key Vault"
     inputs:
       runAsPreJob: false
-      ConnectedServiceName: "DTS-CFTPTL-INTSVC"
+      ConnectedServiceName: "DTS-CFTPTL-INTSVC-WIF"
       keyVaultName: "cftptl-intsvc"
       secretsFilter: "jira-api-token,github-roadmap-private-key,github-roadmap-app-id"
   - task: NodeTool@0
